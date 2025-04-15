@@ -7,21 +7,27 @@ using namespace std;
 
 class Node {
     public:
-        string data;
-        Node* nextColumn;
-        Node* nextRow;
+        string* data;
+        Node* next;
 
         Node() {
-            data = "";
-            nextColumn = nullptr;
-            nextRow = nullptr;
+            data = nullptr;
+            next = nullptr;
         }
+
+        ~Node() {
+            delete[] data;
+            delete next;
+        }
+
+        Node(const Node&) = delete;
+        Node& operator=(const Node&) = delete;
 };
 
 class LinkedList {
     public:
         int error;
-        Node* fieldHead;
+        string* fieldHead;
         Node* head;
         int x;
         int y;
@@ -37,29 +43,8 @@ class LinkedList {
         }
 
         ~LinkedList() {
-            while (fieldHead) {
-                Node* next = fieldHead->nextColumn;
-                delete fieldHead;
-                fieldHead = next;
-            }
-
-            Node* downTraversingNode = head;
-
-            // Delete Row by Row
-            while (downTraversingNode) {
-                // Get Current Row
-                Node* rightTraversingNode = downTraversingNode;
-                
-                // Get Next Row
-                downTraversingNode = downTraversingNode->nextRow;
-
-                // Delete Current Row
-                while (rightTraversingNode) {
-                    Node* nextNode = rightTraversingNode->nextColumn;
-                    delete rightTraversingNode;
-                    rightTraversingNode = nextNode;
-                }
-            }
+            delete[] fieldHead;
+            delete head;
         }
 };
 
@@ -104,29 +89,29 @@ class Functions {
         }
         
         // Helper function to split a line by comma
-        Node* createRow(const string& line) {
+        string* createRow(const string& line, const int numCols) {
             int col = 0;
             string current = "";
 
-            Node* head = new Node();
-            Node* currentNode = head;
+            string* data = new string[numCols];
             
             for (size_t i = 0; i <= line.length(); i++) {
                 if (i == line.length() || line[i] == ',') {
-                    currentNode->data = current;
+                    data[col] = current;
                     current = "";
 
-                    if (i != line.length()) {
-                        currentNode->nextColumn = new Node();
-                        currentNode = currentNode->nextColumn;
-                    }
+                    col++;
 
+                    if (col >= numCols) {
+                        break;
+                    }
                 } else {
                     current += line[i];
                 }
+
             }
 
-            return head;
+            return data;
         }
         
         /*
@@ -168,11 +153,11 @@ class Functions {
             // Count columns and allocate memory for fields
             int numCols = countColumns(headerLine);
             data.x = numCols;
-            data.fieldHead = createRow(headerLine);
+            data.fieldHead = createRow(headerLine, numCols);
 
             // Set dimensions and allocate memory for data
             data.y = totalRows - 1; // Subtract 1 for header row
-            data.head = buildLinkedList(file);
+            data.head = buildLinkedList(file, numCols);
 
             file.close();
             
@@ -194,39 +179,31 @@ class Functions {
                 return;
             }
 
-            Node* rightTraversingNode = data.fieldHead;
-            Node* downTraversingHead = data.head;
-            Node* downTraversingNode;
+            Node* currentNode = data.head;
             int x = 0;
             
             // First, determine the maximum width needed for each column
             int* columnWidths = new int[data.x];
-            while (rightTraversingNode) {
 
-                if (downTraversingHead) {
-                    downTraversingNode = downTraversingHead;
-                    downTraversingHead = downTraversingHead->nextColumn;
-                }
+            const int extraPadding = 2;
 
-                // Initialize with header width
-                columnWidths[x] = rightTraversingNode->data.length();
+            // Set Default 
+            for (int x = 0; x < data.x; x++) {
+                columnWidths[x] = (*(data.fieldHead + x)).length() + extraPadding;
+            }
 
-
-                // Check all data rows for this column
-                while (downTraversingNode) {
-                    int currentNodeLength = downTraversingNode->data.length();
+            // Get Max Column Width - Row by Row
+            while (currentNode) {
+                // Iterate through Row Data
+                for (int x = 0; x < data.x; x++) {
+                    int currentNodeLength = (*(currentNode->data + x)).length() + extraPadding;
 
                     if (currentNodeLength > columnWidths[x]) {
                         columnWidths[x] = currentNodeLength;
                     }
-
-                    downTraversingNode = downTraversingNode->nextRow;
                 }
 
-                // Add some padding
-                columnWidths[x] += 2;
-                x += 1;
-                rightTraversingNode = rightTraversingNode->nextColumn;
+                currentNode = currentNode->next;
             }
             
             // Print the table header with column names
@@ -238,21 +215,18 @@ class Functions {
                 cout << "+";
             }
             cout << endl;
-            
 
-            rightTraversingNode = data.fieldHead;
-            x = 0;
-
+            // Print Header Row
             cout << "|";
-            while (rightTraversingNode) {
-                cout << " " << rightTraversingNode->data;
+            for (int x = 0; x < data.x; x++) {
+                cout << " " << *(data.fieldHead + x);
+                
+                int nPadding = columnWidths[x] - (*(data.fieldHead + x)).length();
                 // Add padding spaces
-                for (int k = 0; k < columnWidths[x] - rightTraversingNode->data.length(); k++) {
+                for (int k = 0; k < nPadding; k++) {
                     cout << " ";
                 }
                 cout << " |";
-                rightTraversingNode = rightTraversingNode->nextColumn;
-                x++;
             }
             cout << endl;
             
@@ -266,28 +240,32 @@ class Functions {
             }
             cout << endl;
 
-            downTraversingNode = data.head;
+            currentNode = data.head;
 
             // Print data rows
-            while (downTraversingNode) {
-                cout << "|";
-    
-                rightTraversingNode = downTraversingNode;
-                int x = 0;
+            while (currentNode) {
+                // Initialize with header width
+                columnWidths[x] = (*(data.fieldHead + x)).length();
 
-                while (rightTraversingNode) {
-                    cout << " " << rightTraversingNode->data;
+                cout << "|";
+                // Iterate through Row Data
+                for (int x = 0; x < data.x; x++) {
+                    string currentData = *(currentNode->data + x);
+
+                    cout << " " << currentData;
+
+                    int nPadding = columnWidths[x] - currentData.length();
+
                     // Add padding spaces
-                    for (int k = 0; k < columnWidths[x] - rightTraversingNode->data.length(); k++) {
+                    for (int k = 0; k < nPadding; k++) {
                         cout << " ";
                     }
                     cout << " |";
-                    rightTraversingNode = rightTraversingNode->nextColumn;
-                    x++;
                 }
                 cout << endl;
-                downTraversingNode = downTraversingNode->nextRow;
-            }
+
+                currentNode = currentNode->next;
+            }            
             
             // Print bottom border
             cout << "+";
@@ -309,7 +287,7 @@ class Functions {
         /*
             Get the head Node
         */
-        Node* buildLinkedList(ifstream& file) {
+        Node* buildLinkedList(ifstream& file, const int numCols) {
             string line;
 
             // File has no more lines then return null
@@ -318,28 +296,11 @@ class Functions {
             }
 
             // Get Current and Next Rows
-            Node* currentHead = createRow(line);
-            Node* nextHead = buildLinkedList(file);
+            Node* currentNode = new Node();
+            currentNode->data = createRow(line, numCols);
+            currentNode->next = buildLinkedList(file, numCols);
 
-            // Next Head doesnt exist then return current head
-            if (!nextHead) {
-                return currentHead;
-            }
-
-            // Create Pointers for traversal
-            Node* currentNode1 = currentHead;
-            Node* currentNode2 = nextHead;
-
-            while (currentNode1 && currentNode2) {
-                // Points 1 Node down
-                currentNode1->nextRow = currentNode2;
-                
-                // Traverse
-                currentNode1 = currentNode1->nextColumn;
-                currentNode2 = currentNode2->nextColumn;
-            }
-
-            return currentHead;
+            return currentNode;
         }
 };
     
