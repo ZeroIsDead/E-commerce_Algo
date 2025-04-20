@@ -29,6 +29,7 @@ class LinkedList {
         int error;
         string* fieldHead;
         Node* head;
+        Node* tail;
         int x;
         int y;
 
@@ -164,7 +165,15 @@ class Functions {
             // No Head -> Error
             if (!data.head) {
                 data.error = 1;
+                return data;
             }
+
+            Node* currentNode = data.head;
+            while (currentNode) {
+                currentNode = currentNode->next;
+            }
+
+            data.tail = currentNode;
 
             data.error = 0;
             return data;
