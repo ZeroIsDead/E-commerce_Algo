@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <cstring>
+#include <cmath>
 
 using namespace std;
 
@@ -115,6 +116,14 @@ class Functions {
             return data;
         }
         
+
+        Node* getNodeTail(Node* head) {
+            while (head && head->next) {
+                head = head->next;
+            }
+
+            return head;
+        }
         /*
             Datadata2d Stuct that take the CSV filename as argument.
             FIELD names are stored in FIELDS, 1D array
@@ -168,12 +177,7 @@ class Functions {
                 return data;
             }
 
-            Node* currentNode = data.head;
-            while (currentNode) {
-                currentNode = currentNode->next;
-            }
-
-            data.tail = currentNode;
+            data.tail = getNodeTail(data.head);
 
             data.error = 0;
             return data;
@@ -290,6 +294,123 @@ class Functions {
             delete[] columnWidths;
         }
 
+        Node* getNodeAtIndex(Node* head, const int index) {
+            int i = 0;
+            while (head && i < index) {
+                head = head->next;
+                i++;
+            }
+            return head;
+        }
+
+        int fibMonaccianSearch(Node* head, int n, const string& item, const int fieldIndex)
+        {
+            /* Initialize fibonacci numbers */
+            int fibMMm2 = 0; // (m-2)'th Fibonacci No.
+            int fibMMm1 = 1; // (m-1)'th Fibonacci No.
+            int fibM = fibMMm2 + fibMMm1; // m'th Fibonacci
+         
+            /* fibM is going to store the smallest Fibonacci
+               Number greater than or equal to n */
+            while (fibM < n) {
+                fibMMm2 = fibMMm1;
+                fibMMm1 = fibM;
+                fibM = fibMMm2 + fibMMm1;
+            }
+         
+            // Marks the eliminated range from front
+            int offset = -1;
+         
+            /* while there are elements to be inspected. Note that
+               we compare arr[fibMm2] with x. When fibM becomes 1,
+               fibMm2 becomes 0 */
+            while (fibM > 1) {
+                // Check if fibMm2 is a valid location
+                int i = min(offset + fibMMm2, n - 1);
+         
+                /* If x is greater than the value at index fibMm2,
+                   cut the subarray array from offset to i */
+                if (getNodeAtIndex(head, i)->data[fieldIndex] < item) {
+                    fibM = fibMMm1;
+                    fibMMm1 = fibMMm2;
+                    fibMMm2 = fibM - fibMMm1;
+                    offset = i;
+                }
+         
+                /* If x is greater than the value at index fibMm2,
+                   cut the subarray after i+1  */
+                else if (getNodeAtIndex(head, i)->data[fieldIndex] > item) {
+                    fibM = fibMMm2;
+                    fibMMm1 = fibMMm1 - fibMMm2;
+                    fibMMm2 = fibM - fibMMm1;
+                }
+         
+                /* element found. return index */
+                else
+                    return i;
+            }
+         
+            /* comparing the last element with x */
+            if (fibMMm1 && getNodeAtIndex(head, offset + 1)->data[fieldIndex] == item)
+                return offset + 1;
+         
+            /*element not found. return -1 */
+            return -1;
+        }
+
+
+        Node* mergeSort(Node* head, const int length, const int fieldIndex) {
+            if (length <= 1) {
+                return head; // Base case - Already Sorted
+            }
+
+            int middlePoint = ceil(length / 2);
+            Node* middleNode = getNodeAtIndex(head, middlePoint - 1);
+
+            // Get Head Node of Second Half
+            Node* RightNodeHead = middleNode->next;
+            middleNode->next = nullptr;
+
+            // Get Head Nodes of Both Sides (Already Sorted)
+            Node* SortedLeftNodeHead = mergeSort(head, middlePoint, fieldIndex);
+            Node* SortedRightNodeHead = mergeSort(RightNodeHead, length - middlePoint, fieldIndex);
+
+            // Merge
+            Node* currentLeftNode = SortedLeftNodeHead;
+            Node* currentRightNode = SortedRightNodeHead;
+
+            Node* returnedHead = currentLeftNode->data[fieldIndex] >= currentRightNode->data[fieldIndex]  ? currentRightNode : currentLeftNode;
+            Node* previousNode = nullptr;
+
+            while (currentLeftNode != nullptr && currentRightNode != nullptr) {
+                if (currentLeftNode->data[fieldIndex] >= currentRightNode->data[fieldIndex]) { // Left Bigger or Equal to Right
+                    // Iterate to next Node
+                    Node* TransferedNode = currentRightNode;
+                    currentRightNode = currentRightNode->next;
+                    
+                    if (previousNode != nullptr) {
+                        previousNode->next = TransferedNode;
+                    }
+
+                    // Track Previous Node
+                    previousNode = TransferedNode;
+
+                    // Place Node from Right side Behind Node from Left side
+                    TransferedNode->next = currentLeftNode;
+                } else  if (currentLeftNode->next == nullptr) { // Left Smaller than Right
+                    currentLeftNode->next = currentRightNode;
+                    break;
+                } else {
+                    // Track Previous Node
+                    previousNode = currentLeftNode;
+
+                    // Iterate to next Node
+                    currentLeftNode = currentLeftNode->next;
+                }
+            }
+
+            return returnedHead;
+        }
 
     private:
 
