@@ -2,7 +2,7 @@
 #include <fstream>
 #include <string>
 #include <cstring>
-#include <cmath>
+#include <chrono>
 
 using namespace std;
 
@@ -47,6 +47,24 @@ class LinkedList {
         ~LinkedList() {
             delete[] fieldHead;
             delete head;
+        }
+};
+
+class Timer {
+    private:
+        std::chrono::steady_clock::time_point startTime;
+        std::chrono::steady_clock::time_point endTime;
+    
+    public:
+        void start() {
+            startTime = std::chrono::steady_clock::now();
+        }
+
+        void end() {
+            endTime = std::chrono::steady_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
+    
+            cout << "Time taken: " << duration.count() << " microseconds" << endl;
         }
 };
 
@@ -364,7 +382,7 @@ class Functions {
                 return head; // Base case - Already Sorted
             }
 
-            int middlePoint = ceil(length / 2);
+            int middlePoint = length / 2;
             Node* middleNode = getNodeAtIndex(head, middlePoint - 1);
 
             // Get Head Node of Second Half

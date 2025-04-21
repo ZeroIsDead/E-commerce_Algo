@@ -22,9 +22,20 @@ int main() {
     }
     else{
         // Display the data
+
+        Timer timer = Timer();
         cout << "\n==== CSV File Contents ====\n" << endl;
-        functions.displayTabulatedData(data);
-        
+
+        timer.start();
+        data.data = functions.mergeSort(data.data, data.y, 1);
+        timer.end();
+
+        timer.start();
+        cout << functions.fibMonaccianSearch(data.data, data.y, "Mouse", 1) << endl;
+        timer.end();
+
+        // functions.displayTabulatedData(data);
+
         // Show some stats about the data
         cout << "\n==== File Statistics ====\n" << endl;
         cout << "Number of columns: " << data.x << endl;

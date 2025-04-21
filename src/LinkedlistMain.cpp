@@ -28,11 +28,20 @@ int main() {
         // cout << "[DEBUG] head is " << (data.head ? "not null" : "null") << endl;
 
         // Display the data
+
+        Timer timer = Timer();
         cout << "\n==== CSV File Contents ====\n" << endl;
+
+        timer.start();
         data.head = functions.mergeSort(data.head, data.y, 2);
         data.tail = functions.getNodeTail(data.head);
-        // functions.displayTabulatedData(data);
+        timer.end();
+
+        timer.start();
         cout << functions.fibMonaccianSearch(data.head, data.y, "Electronics", 2) << " Index" << endl;
+        timer.end();
+
+        // functions.displayTabulatedData(data);
         
         // Show some stats about the data
         cout << "\n==== File Statistics ====\n" << endl;
