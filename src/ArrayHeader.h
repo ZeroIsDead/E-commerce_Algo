@@ -137,7 +137,7 @@ public:
     }
 
     /*
-        Displays the data in from struct as a table
+        Displays the data from struct as a table
     */
     void displayTabulatedData(const DataContainer2d& container) {
         if (container.error == 1 || container.fields == nullptr || container.data == nullptr) {
@@ -220,6 +220,11 @@ public:
         // Clean up
         delete[] columnWidths;
     }
+
+    //Sort Algorithum
+    //Search Algorithum
+
+
 };
 
 #endif // DATACONTAINER_H
