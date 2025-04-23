@@ -20,17 +20,17 @@ struct DataContainer2d {
 
 class Timer {
     private:
-        std::chrono::steady_clock::time_point startTime;
-        std::chrono::steady_clock::time_point endTime;
+        chrono::steady_clock::time_point startTime;
+        chrono::steady_clock::time_point endTime;
     
     public:
         void start() {
-            startTime = std::chrono::steady_clock::now();
+            startTime = chrono::steady_clock::now();
         }
 
         void end() {
-            endTime = std::chrono::steady_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
+            endTime = chrono::steady_clock::now();
+            auto duration = chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
     
             cout << "Time taken: " << duration.count() << " microseconds" << endl;
         }
@@ -244,7 +244,201 @@ public:
     //Search Algorithum
 
 
+    /*
+    Helper function to parse date string in format "dd/mm/yyyy" and convert to comparable value
+    Returns a long integer representing the date (yyyymmdd) for easy comparison
+    */
+    long parseDateString(const string& dateStr) {
+        
+        // Expected format: "dd/mm/yyyy"
+        if (dateStr.length() < 10){
+            return 0; // Invalid date format
+        }  
+        
+        int day = stoi(dateStr.substr(0, 2));
+        int month = stoi(dateStr.substr(3, 2));
+        int year = stoi(dateStr.substr(6, 4));
+        
+        // Convert to format yyyymmdd for proper comparison
+        return year * 10000 + month * 100 + day;
+    }
 
+    /*
+        Helper function for heapSort that maintains the heap property with special handling for date strings
+        Rearranges the heap rooted at index i to maintain max heap property
+    */
+    void heapify(string** data, int n, int i, int column, bool isDateColumn) {
+        int largest = i;
+        int left = 2 * i + 1;
+        int right = 2 * i + 2;
+        
+        // Compare based on whether it's a date column or regular string
+        if (isDateColumn) {
+            // Date comparison
+            if (left < n && parseDateString(data[left][column]) > parseDateString(data[largest][column]))
+                largest = left;
+            
+            if (right < n && parseDateString(data[right][column]) > parseDateString(data[largest][column]))
+                largest = right;
+        } else {
+            // Regular string comparison
+            if (left < n && data[left][column] > data[largest][column])
+                largest = left;
+            
+            if (right < n && data[right][column] > data[largest][column])
+                largest = right;
+        }
+        
+        // If largest is not root
+        if (largest != i) {
+            // Swap entire rows to maintain row relationships
+            string* temp = data[i];
+            data[i] = data[largest];
+            data[largest] = temp;
+            
+            // Recursively heapify the affected sub-tree
+            heapify(data, n, largest, column, isDateColumn);
+        }
+    }
+
+    /*
+        Helper function to reverse the array to convert from descending to ascending order
+    */
+    void reverseArray(string** data, int size) {
+        for (int i = 0; i < size / 2; i++) {
+            string* temp = data[i];
+            data[i] = data[size - 1 - i];
+            data[size - 1 - i] = temp;
+        }
+    }
+
+    /*
+        Sorts the 2D data array in ascending order based on values in the specified column
+        Has special handling for date columns in format "dd/mm/yyyy"
+        Returns the same DataContainer2d structure with data sorted
+    */
+    DataContainer2d heapSort(DataContainer2d data, int column) {
+        // Check for valid input
+        if (data.error == 1 || column < 0 || column >= data.x) {
+            cerr << "Error: Invalid data container or column index" << endl;
+            // Set error flag and return
+            data.error = 1;
+            return data;
+        }
+        
+        // Detect if this is a date column by checking format of first value
+        bool isDateColumn = false;
+        if (data.y > 0) {
+            string val = data.data[0][column];
+            // Simple check for date format "dd/mm/yyyy"
+            if (val.length() >= 10 && val[2] == '/' && val[5] == '/') {
+                isDateColumn = true;
+            }
+        }
+        
+        // Sort the original data directly
+        // Build heap (rearrange array)
+        for (int i = data.y / 2 - 1; i >= 0; i--)
+            heapify(data.data, data.y, i, column, isDateColumn);
+        
+        // Extract elements from heap one by one
+        for (int i = data.y - 1; i > 0; i--) {
+            // Move current root to end
+            string* temp = data.data[0];
+            data.data[0] = data.data[i];
+            data.data[i] = temp;
+            
+            // Call heapify on the reduced heap
+            heapify(data.data, i, 0, column, isDateColumn);
+        }
+        
+        // Reverse the array to get ascending order (since heap sort produces descending)
+        reverseArray(data.data, data.y);
+        
+        // Return the original container with sorted data
+        return data;
+    }
+
+    /*
+    Finds unique values in the specified column and counts their occurrences
+    Assumes input data is already sorted by the specified column
+    Returns a DataContainer2d with two columns: the unique values and their counts
+    */
+
+    DataContainer2d repeatingItem(DataContainer2d& data, int column) {
+        // Check for valid input
+        if (data.error == 1 || column < 0 || column >= data.x) {
+            cerr << "Error: Invalid data container or column index" << endl;
+            DataContainer2d errorContainer;
+            errorContainer.error = 1;
+            return errorContainer;
+        }
+        
+        // Count unique values and their occurrences
+        // This is more efficient since the data is already sorted
+        int uniqueCount = 0;
+        
+        // First pass: count unique values
+        if (data.y > 0) {
+            uniqueCount = 1; // At least one unique value if there's data
+            
+            for (int i = 1; i < data.y; i++) {
+                if (data.data[i][column] != data.data[i-1][column]) {
+                    uniqueCount++;
+                }
+            }
+        }
+        
+        // Create result container
+        DataContainer2d result;
+        result.error = 0;
+        result.x = 2; // Two columns: value and count
+        result.y = uniqueCount; // Number of unique values
+        
+        // Set up field names
+        result.fields = new string[2];
+        result.fields[0] = "Value_" + data.fields[column]; // Use original column name
+        result.fields[1] = "Count";
+        
+        // Allocate memory for data
+        result.data = new string*[result.y];
+        
+        // Fill data with unique values and their counts
+        if (data.y > 0) {
+            int resultRow = 0;
+            string currentValue = data.data[0][column];
+            int currentCount = 1;
+            
+            result.data[0] = new string[2];
+            
+            // Process all rows
+            for (int i = 1; i < data.y; i++) {
+                if (data.data[i][column] == currentValue) {
+                    // Same value, increment count
+                    currentCount++;
+                } else {
+                    // New value found, store the previous value and its count
+                    result.data[resultRow][0] = currentValue;
+                    result.data[resultRow][1] = to_string(currentCount);
+                    resultRow++;
+                    
+                    // Start counting the new value
+                    currentValue = data.data[i][column];
+                    currentCount = 1;
+                    
+                    // Allocate memory for the new row
+                    result.data[resultRow] = new string[2];
+                }
+            }
+            
+            // Store the last value and its count
+            result.data[resultRow][0] = currentValue;
+            result.data[resultRow][1] = to_string(currentCount);
+        }
+        
+        return result;
+    }
+    
     string** getSubArray(string** arr,int start, int end) {
         int length = end - start;
 
@@ -256,6 +450,7 @@ public:
 
         return subArray;
     }
+
 
     string** mergeSort(string** arr, int length, int fieldIndex) {
         if (length <= 1) {
