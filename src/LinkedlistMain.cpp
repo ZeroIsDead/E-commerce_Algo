@@ -1,4 +1,4 @@
-#include "ArrayHeader.h"
+#include "LinkedListHeader.hpp"
 #include <iostream>
 #include <string>
 
@@ -13,7 +13,9 @@ int main() {
     
     // Read the CSV file - THIS LINE WAS MISSING
     cout << "Reading file: " << filepath << endl;
-    DataContainer2d data = functions.getdata(filepath);
+    LinkedList data = functions.getdata(filepath);
+
+    cout << data.error;
 
     // Check if there was an error reading the file
     if (data.error == 1) {
@@ -21,26 +23,31 @@ int main() {
          return 0;
     }
     else{
+        // cout << "[DEBUG] data.error = " << data.error << endl;
+        // cout << "[DEBUG] fieldHead is " << (data.fieldHead ? "not null" : "null") << endl;
+        // cout << "[DEBUG] head is " << (data.head ? "not null" : "null") << endl;
+
         // Display the data
 
         Timer timer = Timer();
         cout << "\n==== CSV File Contents ====\n" << endl;
 
         timer.start();
-        data.data = functions.mergeSort(data.data, data.y, 1);
+        data.head = functions.mergeSort(data.head, data.y, 2);
+        data.tail = functions.getNodeTail(data.head);
         timer.end();
 
         timer.start();
-        cout << functions.fibMonaccianSearch(data.data, data.y, "Mouse", 1) << endl;
+        cout << functions.fibMonaccianSearch(data.head, data.y, "Electronics", 2) << " Index" << endl;
         timer.end();
 
         // functions.displayTabulatedData(data);
-
+        
         // Show some stats about the data
         cout << "\n==== File Statistics ====\n" << endl;
         cout << "Number of columns: " << data.x << endl;
         cout << "Number of data rows: " << data.y << endl;
-        cout << "Total cells: " << data.x * data.y << endl;    
+        cout << "Total cells: " << data.x * data.y << endl;  
     }
     return 0;
 }

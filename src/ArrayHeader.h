@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 #include <cstring>
+#include <chrono>
 
 using namespace std;
 
@@ -15,6 +16,24 @@ struct DataContainer2d {
     string** data; // a 2D array containing each line of data
     int y; // y - number of rows 
     int x; // x - number of columns
+};
+
+class Timer {
+    private:
+        std::chrono::steady_clock::time_point startTime;
+        std::chrono::steady_clock::time_point endTime;
+    
+    public:
+        void start() {
+            startTime = std::chrono::steady_clock::now();
+        }
+
+        void end() {
+            endTime = std::chrono::steady_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
+    
+            cout << "Time taken: " << duration.count() << " microseconds" << endl;
+        }
 };
 
 class Functions {
@@ -223,6 +242,122 @@ public:
 
     //Sort Algorithum
     //Search Algorithum
+
+
+
+    string** getSubArray(string** arr,int start, int end) {
+        int length = end - start;
+
+        string** subArray = new string*[length];
+
+        for (int i = 0; i < length; i++) {
+            subArray[i] = arr[start + i];
+        }
+
+        return subArray;
+    }
+
+    string** mergeSort(string** arr, int length, int fieldIndex) {
+        if (length <= 1) {
+            return arr;
+        }
+
+        int middlePoint = length / 2;
+        int leftSize = middlePoint, rightSize = length - middlePoint;
+        string** leftArr = getSubArray(arr, 0, middlePoint);
+        string** rightArr = getSubArray(arr, middlePoint, length);
+
+        string** sortedLeft = mergeSort(leftArr, leftSize, fieldIndex);
+        string** sortedRight = mergeSort(rightArr, rightSize, fieldIndex);
+
+        string** sortedArr = new string*[length];
+        int leftIndex = 0, rightIndex = 0;
+
+        for (int i=0; i < length; i++) {
+            if (leftIndex >= leftSize) {
+                sortedArr[i] = sortedRight[rightIndex];
+                rightIndex++;
+                continue;
+            }
+
+            if (rightIndex >= rightSize) {
+                sortedArr[i] = sortedLeft[leftIndex];
+                leftIndex++;
+                continue;
+            }
+
+            if (sortedLeft[leftIndex][fieldIndex] > sortedRight[rightIndex][fieldIndex]) {
+                sortedArr[i] = sortedRight[rightIndex];
+                rightIndex++;
+            } else {
+                sortedArr[i] = sortedLeft[leftIndex];
+                leftIndex++;
+            }
+        }
+
+        // Clean Shallow Copies
+        delete[] sortedLeft;
+        delete[] sortedRight;
+
+        return sortedArr;
+    }
+
+
+    int fibMonaccianSearch(string** arr, int n, const string& item, const int fieldIndex)
+    {
+        /* Initialize fibonacci numbers */
+        int fibMMm2 = 0; // (m-2)'th Fibonacci No.
+        int fibMMm1 = 1; // (m-1)'th Fibonacci No.
+        int fibM = fibMMm2 + fibMMm1; // m'th Fibonacci
+     
+        /* fibM is going to store the smallest Fibonacci
+           Number greater than or equal to n */
+        while (fibM < n) {
+            fibMMm2 = fibMMm1;
+            fibMMm1 = fibM;
+            fibM = fibMMm2 + fibMMm1;
+        }
+     
+        // Marks the eliminated range from front
+        int offset = -1;
+     
+        /* while there are elements to be inspected. Note that
+           we compare arr[fibMm2] with x. When fibM becomes 1,
+           fibMm2 becomes 0 */
+        while (fibM > 1) {
+            // Check if fibMm2 is a valid location
+            int i = min(offset + fibMMm2, n - 1);
+     
+            /* If x is greater than the value at index fibMm2,
+               cut the subarray array from offset to i */
+            if (arr[i][fieldIndex] < item) {
+                fibM = fibMMm1;
+                fibMMm1 = fibMMm2;
+                fibMMm2 = fibM - fibMMm1;
+                offset = i;
+            }
+     
+            /* If x is greater than the value at index fibMm2,
+               cut the subarray after i+1  */
+            else if (arr[i][fieldIndex] > item) {
+                fibM = fibMMm2;
+                fibMMm1 = fibMMm1 - fibMMm2;
+                fibMMm2 = fibM - fibMMm1;
+            }
+     
+            /* element found. return index */
+            else
+                return i;
+        }
+     
+        /* comparing the last element with x */
+        if (fibMMm1 && arr[offset + 1][fieldIndex] == item)
+            return offset + 1;
+     
+        /*element not found. return -1 */
+        return -1;
+    }
+
 
 
 };
