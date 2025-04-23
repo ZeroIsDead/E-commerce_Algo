@@ -52,17 +52,17 @@ class LinkedList {
 
 class Timer {
     private:
-        std::chrono::steady_clock::time_point startTime;
-        std::chrono::steady_clock::time_point endTime;
+        chrono::steady_clock::time_point startTime;
+        chrono::steady_clock::time_point endTime;
     
     public:
         void start() {
-            startTime = std::chrono::steady_clock::now();
+            startTime = chrono::steady_clock::now();
         }
 
         void end() {
-            endTime = std::chrono::steady_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
+            endTime = chrono::steady_clock::now();
+            auto duration = chrono::duration_cast < chrono::microseconds>(endTime - startTime);
     
             cout << "Time taken: " << duration.count() << " microseconds" << endl;
         }
@@ -150,6 +150,7 @@ class Functions {
             INT Y stores the number of ROWS
             INT ERROR stores 1 or 0 depending on if the struct has been created properly or not
         */
+
         LinkedList getdata(const string& filename) {
             LinkedList data;
             string path = "../data/"+filename;

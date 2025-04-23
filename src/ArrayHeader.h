@@ -103,7 +103,7 @@ public:
     */
     DataContainer2d getdata(const string& filename) {
         DataContainer2d container;
-        string path = "../data/"+filename;
+        string path = "../data/"+filename+".csv";
 
         
         // Count rows and prepare to read the file
@@ -273,20 +273,24 @@ public:
         int right = 2 * i + 2;
         
         // Compare based on whether it's a date column or regular string
-        if (isDateColumn) {
+        if (isDateColumn){
             // Date comparison
-            if (left < n && parseDateString(data[left][column]) > parseDateString(data[largest][column]))
+            if (left < n && parseDateString(data[left][column]) > parseDateString(data[largest][column])){
                 largest = left;
-            
-            if (right < n && parseDateString(data[right][column]) > parseDateString(data[largest][column]))
+            }
+            if (right < n && parseDateString(data[right][column]) > parseDateString(data[largest][column])){
                 largest = right;
-        } else {
+            }
+        } 
+        else{
             // Regular string comparison
-            if (left < n && data[left][column] > data[largest][column])
-                largest = left;
+            if (left < n && data[left][column] > data[largest][column]){
+                largest = left;   
+            }
             
-            if (right < n && data[right][column] > data[largest][column])
+            if (right < n && data[right][column] > data[largest][column]){
                 largest = right;
+            }  
         }
         
         // If largest is not root
@@ -302,8 +306,9 @@ public:
     }
 
     /*
-        Helper function to reverse the array to convert from descending to ascending order
+        Helper function to reverse the array 
     */
+   
     void reverseArray(string** data, int size) {
         for (int i = 0; i < size / 2; i++) {
             string* temp = data[i];
@@ -360,9 +365,69 @@ public:
     }
 
     /*
-    Finds unique values in the specified column and counts their occurrences
-    Assumes input data is already sorted by the specified column
-    Returns a DataContainer2d with two columns: the unique values and their counts
+        Performs interpolation search on a sorted string array
+        Returns the index of the target string if found, otherwise -1
+        
+        For string interpolation, we use a simple heuristic based on first character ASCII value
+        This is a simplified approach since true string interpolation is more complex
+    */
+
+    int interpolationSearch(string** data, int size, int column, const string& target) {
+        // Check if array is empty
+        if (size <= 0) return -1;
+        
+        int low = 0;
+        int high = size - 1;
+        
+        // Continue until we find the element or narrow down to an empty subarray
+        while (low <= high && target >= data[low][column] && target <= data[high][column]) {
+            // No division by zero check
+            if (low == high) {
+                if (data[low][column] == target) return low;
+                return -1;
+            }
+            
+            // Calculate the approximated position using interpolation formula
+            // For strings, we use a simple ASCII value based heuristic
+            int targetChar = target.empty() ? 0 : target[0];
+            int lowChar = data[low][column].empty() ? 0 : data[low][column][0];
+            int highChar = data[high][column].empty() ? 0 : data[high][column][0];
+            
+            // Avoid division by zero
+            if (highChar == lowChar) {
+                // Sequential search in this case
+                for (int i = low; i <= high; i++) {
+                    if (data[i][column] == target) return i;
+                }
+                return -1;
+            }
+            
+            // Calculate probe position
+            int pos = low + ((targetChar - lowChar) * (high - low)) / (highChar - lowChar);
+            
+            // Bound the position to prevent array out of bounds
+            if (pos < low) pos = low;
+            if (pos > high) pos = high;
+            
+            // If found, return the position
+            if (data[pos][column] == target) return pos;
+            
+            // If the value at pos is less than target, search in right sub-array
+            if (data[pos][column] < target) low = pos + 1;
+            
+            // If the value at pos is greater than target, search in left sub-array
+            else high = pos - 1;
+        }
+        
+        // Element not found
+        return -1;
+    }
+
+    /*
+        Finds unique values in the specified column and counts their occurrences
+        Uses interpolation search for efficient unique value lookup
+        Assumes data is already sorted by the specified column
+        Returns a DataContainer2d with two columns: the unique values and their counts
     */
 
     DataContainer2d repeatingItem(DataContainer2d& data, int column) {
@@ -374,17 +439,62 @@ public:
             return errorContainer;
         }
         
-        // Count unique values and their occurrences
-        // This is more efficient since the data is already sorted
+        // First pass to count unique values
         int uniqueCount = 0;
-        
-        // First pass: count unique values
         if (data.y > 0) {
             uniqueCount = 1; // At least one unique value if there's data
             
             for (int i = 1; i < data.y; i++) {
                 if (data.data[i][column] != data.data[i-1][column]) {
                     uniqueCount++;
+                }
+            }
+        }
+        
+        // Create arrays for unique values and their counts
+        string* uniqueValues = new string[uniqueCount];
+        int* counts = new int[uniqueCount];
+        
+        // Second pass to populate the arrays
+        if (data.y > 0) {
+            int uniqueIndex = 0;
+            uniqueValues[uniqueIndex] = data.data[0][column];
+            counts[uniqueIndex] = 1;
+            
+            for (int i = 1; i < data.y; i++) {
+                if (data.data[i][column] == uniqueValues[uniqueIndex]) {
+                    counts[uniqueIndex]++;
+                } else {
+                    uniqueIndex++;
+                    uniqueValues[uniqueIndex] = data.data[i][column];
+                    counts[uniqueIndex] = 1;
+                }
+            }
+        }
+        
+        // Now, let's use interpolation search to verify our counts
+        // This demonstrates the use of interpolation search on the sorted data
+        for (int i = 0; i < uniqueCount; i++) {
+            // Find the first occurrence of this value using interpolation search
+            int firstOccurrence = interpolationSearch(data.data, data.y, column, uniqueValues[i]);
+            
+            if (firstOccurrence != -1) {
+                // Once we find the first occurrence, we can count consecutive occurrences
+                // This is more efficient than calling interpolation search multiple times
+                int actualCount = 0;
+                
+                // Count forward from the found index
+                int j = firstOccurrence;
+                while (j < data.y && data.data[j][column] == uniqueValues[i]) {
+                    actualCount++;
+                    j++;
+                }
+                
+                // If our original count doesn't match, update it
+                // This should never happen if the data is properly sorted, but included as a validation
+                if (counts[i] != actualCount) {
+                    cerr << "Warning: Count mismatch detected for value " << uniqueValues[i] << endl;
+                    counts[i] = actualCount;
                 }
             }
         }
@@ -400,41 +510,17 @@ public:
         result.fields[0] = "Value_" + data.fields[column]; // Use original column name
         result.fields[1] = "Count";
         
-        // Allocate memory for data
+        // Allocate memory for data and populate it
         result.data = new string*[result.y];
-        
-        // Fill data with unique values and their counts
-        if (data.y > 0) {
-            int resultRow = 0;
-            string currentValue = data.data[0][column];
-            int currentCount = 1;
-            
-            result.data[0] = new string[2];
-            
-            // Process all rows
-            for (int i = 1; i < data.y; i++) {
-                if (data.data[i][column] == currentValue) {
-                    // Same value, increment count
-                    currentCount++;
-                } else {
-                    // New value found, store the previous value and its count
-                    result.data[resultRow][0] = currentValue;
-                    result.data[resultRow][1] = to_string(currentCount);
-                    resultRow++;
-                    
-                    // Start counting the new value
-                    currentValue = data.data[i][column];
-                    currentCount = 1;
-                    
-                    // Allocate memory for the new row
-                    result.data[resultRow] = new string[2];
-                }
-            }
-            
-            // Store the last value and its count
-            result.data[resultRow][0] = currentValue;
-            result.data[resultRow][1] = to_string(currentCount);
+        for (int i = 0; i < result.y; i++) {
+            result.data[i] = new string[2];
+            result.data[i][0] = uniqueValues[i];
+            result.data[i][1] = to_string(counts[i]);
         }
+        
+        // Clean up temporary arrays
+        delete[] uniqueValues;
+        delete[] counts;
         
         return result;
     }
