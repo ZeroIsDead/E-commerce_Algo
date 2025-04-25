@@ -255,6 +255,7 @@ public:
     Helper function to parse date string in format "dd/mm/yyyy" and convert to comparable value
     Returns a long integer representing the date (yyyymmdd) for easy comparison
     */
+   
     long parseDateString(const string& dateStr) {
         
         // Expected format: "dd/mm/yyyy"
@@ -274,19 +275,14 @@ public:
     Checks if a string contains only numeric characters (integer)
     Returns true if the string represents a number, false otherwise
     */
+
     bool isNumeric(const string& str) {
-        if (str.empty()) {
+        
+        if (str == "") {
             return false;
         }
         
-        // Check if the string contains only digits (allowing for a leading minus sign)
-        size_t start = 0;
-        if (str[0] == '-' || str[0] == '+') {
-            start = 1;
-            if (str.length() == 1) return false; // Just a sign with no digits
-        }
-        
-        for (size_t i = start; i < str.length(); i++) {
+        for (int i = 0; i < str.length(); i++) {
             if (!isdigit(str[i])) {
                 return false;
             }
@@ -294,12 +290,13 @@ public:
         
         return true;
     }
-    
+
     /*
         Compares two strings with special handling for numeric values
         Returns true if s1 should be sorted before s2
     */
-    bool compareWithNumericHandling(const string& s1, const string& s2) {
+    bool compareWithNumericHandling(string& s1,string& s2) {
+        
         // Check if both strings are numeric
         if (isNumeric(s1) && isNumeric(s2)) {
             // Compare as numbers
@@ -370,49 +367,44 @@ public:
     }
 
     /*
-        Detects if a column contains numeric data by sampling values
-        Returns true if the column appears to contain numeric values
+        Returns true if the first element in the column appears to contain numeric values
     */
     bool isNumericColumn(string** data, int rows, int column) {
-        if (rows <= 0) return false;
-        
-        // Check the first few values (up to 5) to determine if the column is numeric
-        int samplesToCheck = min(5, rows);
-        int numericCount = 0;
-        
-        for (int i = 0; i < samplesToCheck; i++) {
-            if (isNumeric(data[i][column])) {
-                numericCount++;
-            }
+
+        if (isNumeric(data[0][column])) {
+            return true;
         }
-        
-        // If most samples are numeric, consider it a numeric column
-        return (double)numericCount / samplesToCheck >= 0.8;
+        else{
+            return false;
+        }
+    
     }
 
     /*
-        Updated QuickSort that handles numeric columns
+         QuickSort that handles numeric columns, date column and normal strings
     */
     void quickSort(DataContainer2d data, int column) {
         if (data.error != 0){
             cout << "Data entered is empty of invalid! " << endl;
         }
         else{
+
             // Detect column types
             bool isDateColumn = false;
-            bool isNumeric = false;
+            bool isColumnNumeric = false;
             
             // Check for date format
             string val = data.data[0][column];
             if (val.length() >= 10 && val[2] == '/' && val[5] == '/') {
                 isDateColumn = true;
-            } else {
+            } 
+            else{
                 // If not a date column, check if it's numeric
-                isNumeric = isNumericColumn(data.data, data.y, column);
+                isColumnNumeric = isNumericColumn(data.data, data.y, column);
             }
             
             // Sort the data using QuickSort
-            quickSortHelper(data.data, 0, data.y - 1, column, isDateColumn, isNumeric);
+            quickSortHelper(data.data, 0, data.y - 1, column, isDateColumn, isColumnNumeric);
             
         }
         
@@ -423,7 +415,6 @@ public:
     /*
         Helper function to reverse the array 
     */
-   
     void reverseArray(string** data, int size) {
         for (int i = 0; i < size / 2; i++) {
             string* temp = data[i];
@@ -440,7 +431,6 @@ public:
         For string interpolation, we use a simple heuristic based on first character ASCII value
         This is a simplified approach since true string interpolation is more complex
     */
-
     int interpolationSearch(string** data, int size, int column, const string& target) {
         // Check if array is empty
         if (size <= 0) return -1;
@@ -492,13 +482,12 @@ public:
         return -1;
     }
 
+
     /*
         Finds unique values in the specified column and counts their occurrences
-        Uses interpolation search for efficient unique value lookup
         Assumes data is already sorted by the specified column
         Returns a DataContainer2d with two columns: the unique values and their counts
     */
-
     DataContainer2d repeatingItem(DataContainer2d& data, int column) {
         // Check for valid input
         if (data.error == 1 || column < 0 || column >= data.x) {
@@ -549,7 +538,7 @@ public:
         
         // Set up field names
         result.fields = new string[2];
-        result.fields[0] = "Value_" + data.fields[column]; // Use original column name
+        result.fields[0] = data.fields[column]; 
         result.fields[1] = "Count";
         
         // Allocate memory for data and populate it
