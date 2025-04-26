@@ -240,6 +240,8 @@ public:
         delete[] columnWidths;
     }
 
+
+
     //Sort Algorithum
     //Search Algorithum
 
@@ -556,6 +558,126 @@ public:
         return result;
     }
     
+    /*
+        Selection Sort that handles numeric columns, date column and normal strings
+    */
+    /*
+    Checks if a string is a decimal number (contains a dot and can be converted to double)
+    Returns true if the string represents a decimal number, false otherwise
+*/
+bool isDecimal(const string& str) {
+    if (str.empty() || str.find('.') == string::npos) {
+        return false;
+    }
+    
+    try {
+        stod(str);
+        return true;
+    } catch (const std::invalid_argument&) {
+        return false;
+    }
+}
+
+
+/*
+    Selection Sort that handles numeric columns (integers and decimals), date column and normal strings
+*/
+void selectionSort(DataContainer2d data, int column) {
+    if (data.error != 0) {
+        cout << "Data entered is empty or invalid!" << endl;
+        return;
+    }
+    
+    // Detect column types
+    bool isDateColumn = false;
+    bool isColumnNumeric = false;
+    bool isColumnDecimal = false;
+    
+    // Check for date format
+    string val = data.data[0][column];
+    if (val.length() >= 10 && val[2] == '/' && val[5] == '/') {
+        isDateColumn = true;
+    } 
+    else {
+        // If not a date column, check if it's numeric or decimal
+        isColumnNumeric = isNumericColumn(data.data, data.y, column);
+        isColumnDecimal = isDecimal(data.data[0][column]);
+    }
+    
+    // Selection Sort algorithm
+    for (int i = 0; i < data.y - 1; i++) {
+        // Find the minimum element in unsorted array
+        int min_idx = i;
+        
+        for (int j = i + 1; j < data.y; j++) {
+            bool shouldUpdate = false;
+            
+            if (isDateColumn) {
+                // Date comparison
+                if (parseDateString(data.data[j][column]) < parseDateString(data.data[min_idx][column])) {
+                    shouldUpdate = true;
+                }
+            } else if (isColumnDecimal) {
+                // Decimal comparison
+                try {
+                    double val1 = stod(data.data[j][column]);
+                    double val2 = stod(data.data[min_idx][column]);
+                    if (val1 < val2) {
+                        shouldUpdate = true;
+                    }
+                } catch (const std::invalid_argument&) {
+                    // Fall back to string comparison if conversion fails
+                    if (data.data[j][column] < data.data[min_idx][column]) {
+                        shouldUpdate = true;
+                    }
+                }
+            } else if (isColumnNumeric) {
+                // Integer comparison
+                if (compareWithNumericHandling(data.data[j][column], data.data[min_idx][column])) {
+                    shouldUpdate = true;
+                }
+            } else {
+                // Regular string comparison
+                if (data.data[j][column] < data.data[min_idx][column]) {
+                    shouldUpdate = true;
+                }
+            }
+            
+            if (shouldUpdate) {
+                min_idx = j;
+            }
+        }
+        
+        // Swap the found minimum element with the first element
+        if (min_idx != i) {
+            string* temp = data.data[i];
+            data.data[i] = data.data[min_idx];
+            data.data[min_idx] = temp;
+        }
+    }
+}
+
+/*
+    Performs linear search on a string array
+    Returns the index of the target string if found, otherwise -1
+    
+    This is a simple sequential search that works on both sorted and unsorted data
+*/
+int linearSearch(string** data, int size, int column, const string& target) {
+    // Check if array is empty
+    if (size <= 0) return -1;
+    
+    // Sequential search through the array
+    for (int i = 0; i < size; i++) {
+        if (data[i][column] == target) {
+            return i;  // Found the target, return its index
+        }
+    }
+    
+    // Element not found
+    return -1;
+}
+
     string** getSubArray(string** arr,int start, int end) {
         int length = end - start;
 
