@@ -829,6 +829,105 @@ public:
             }
         }
     }
+
+    int binarySearch(string** data, int size, int column, const string& target) 
+    {
+        // Check if array is empty
+        if (size <= 0) return -1;
+        
+        int low = 0;
+        int high = size - 1;
+        
+        // Detect if column contains dates, numeric or decimal values
+        bool isDateColumn = false;
+        bool isColumnNumeric = false;
+        bool isColumnDecimal = false;
+        
+        // Check for date format
+        string val = data[0][column];
+        if (val.length() >= 10 && val[2] == '/' && val[5] == '/') 
+        {
+            isDateColumn = true;
+        } 
+        else 
+        {
+            // First check if it's a decimal
+            if (val.find('.') != string::npos) 
+            {
+                try {
+                    stod(val);
+                    isColumnDecimal = true;
+                } catch (...) {
+                    // Not a valid decimal
+                }
+            }
+            // If not decimal, check if it's numeric
+            if (!isColumnDecimal) 
+            {
+                try 
+                {
+                    stoi(val);
+                    isColumnNumeric = true;
+                } 
+                catch (...) 
+                {
+                    // Not a valid numeric
+                }
+            }
+        }
+        
+        // Binary search
+        while (low <= high) 
+        {
+            int mid = low + (high - low) / 2;
+            
+            // Check if target is present at mid
+            bool isEqual = false;
+            bool isLess = false;
+            
+            if (isDateColumn) {
+                // Date comparison
+                long midDate = parseDateString(data[mid][column]);
+                long targetDate = parseDateString(target);
+                isEqual = (midDate == targetDate);
+                isLess = (midDate > targetDate);
+            } 
+            else if (isColumnDecimal) {
+                // Decimal comparison
+                double midVal = stod(data[mid][column]);
+                double targetVal = stod(target);
+                isEqual = (midVal == targetVal);
+                isLess = (midVal > targetVal);
+            }
+            else if (isColumnNumeric) {
+                // Integer comparison
+                int midVal = stoi(data[mid][column]);
+                int targetVal = stoi(target);
+                isEqual = (midVal == targetVal);
+                isLess = (midVal > targetVal);
+            }
+            else {
+                // String comparison
+                isEqual = (data[mid][column] == target);
+                isLess = (data[mid][column] > target);
+            }
+            
+            // If found at mid, return the position
+            if (isEqual) 
+                return mid;
+            
+            // If target is smaller, search in left half
+            if (isLess)
+                high = mid - 1;
+            // If target is larger, search in right half
+            else
+                low = mid + 1;
+        }
+        
+        // Element not found
+        return -1;
+    }
+
 };
 
 #endif // DATACONTAINER_H
