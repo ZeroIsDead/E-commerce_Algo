@@ -829,8 +829,6 @@ public:
 
     int binarySearch(string** data, int size, int column, const string& target) 
     {
-        // Check if array is empty
-        if (size <= 0) return -1;
         
         int low = 0;
         int high = size - 1;
@@ -842,36 +840,15 @@ public:
         
         // Check for date format
         string val = data[0][column];
-        if (val.length() >= 10 && val[2] == '/' && val[5] == '/') 
-        {
+        if (val.length() >= 10 && val[2] == '/' && val[5] == '/') {
             isDateColumn = true;
         } 
-        else 
-        {
-            // First check if it's a decimal
-            if (val.find('.') != string::npos) 
-            {
-                try {
-                    stod(val);
-                    isColumnDecimal = true;
-                } catch (...) {
-                    // Not a valid decimal
-                }
-            }
-            // If not decimal, check if it's numeric
-            if (!isColumnDecimal) 
-            {
-                try 
-                {
-                    stoi(val);
-                    isColumnNumeric = true;
-                } 
-                catch (...) 
-                {
-                    // Not a valid numeric
-                }
-            }
+        else{
+            // If not a date column, check if it's numeric
+            isColumnNumeric = isNumeric(data[0][column]);
+            isColumnDecimal = isDecimal(data[0][column]);
         }
+
         
         // Binary search
         while (low <= high) 
@@ -910,15 +887,20 @@ public:
             }
             
             // If found at mid, return the position
-            if (isEqual) 
+            if (isEqual){
                 return mid;
-            
+            } 
+                
             // If target is smaller, search in left half
-            if (isLess)
+            if (isLess){
                 high = mid - 1;
+            }
+                
             // If target is larger, search in right half
-            else
+            else{
                 low = mid + 1;
+            }
+                
         }
         
         // Element not found
