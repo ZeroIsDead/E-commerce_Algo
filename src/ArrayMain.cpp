@@ -36,10 +36,15 @@ int main() {
         // timer.end();
 
         timer.start();
-        functions.quickSort(data, 3); 
+        functions.bubbleSort(data, 4); 
         timer.end(); 
 
+        int index = functions.binarySearch(data.data, data.y, 4, "01/01/2024");
+
         functions.displayTabulatedData(data);
+
+        cout << index << endl;
+        cout << data.y << endl;
 
         // Show some stats about the data
         cout << "\n==== File Statistics ====\n" << endl;
