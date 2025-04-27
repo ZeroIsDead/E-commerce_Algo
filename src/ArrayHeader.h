@@ -303,9 +303,18 @@ public:
     */
    bool isDecimal(const string& str) {
         try {
-            stod(str);
-            return true;
-        } catch (const std::invalid_argument&) {
+            // Check if the string contains a decimal point
+            if (str.find('.') != string::npos) {
+                stod(str); // Try converting to verify it's a valid decimal
+                return true;
+            }
+            return false;
+
+        } 
+        catch (const std::invalid_argument&) {
+            return false;
+        } 
+        catch (const std::out_of_range&) {
             return false;
         }
     }
@@ -777,28 +786,29 @@ public:
                 
                 if (isDateColumn) 
                 {
-                    if (parseDateString(data.data[j][column]) < parseDateString(data.data[j + 1][column])) 
-                    {
-                        shouldSwap = true;
-                    }
-                }
-                else if (isColumnNumeric)
-                {
-                    if (stoi(data.data[j][column]) < stoi(data.data[j + 1][column]))
+                    if (parseDateString(data.data[j][column]) > parseDateString(data.data[j + 1][column])) 
                     {
                         shouldSwap = true;
                     }
                 }
                 else if(isColumnDecimal)
                 {
-                    if (stod(data.data[j][column]) < stod(data.data[j + 1][column]))
+                    if (stod(data.data[j][column]) > stod(data.data[j + 1][column]))
                     {
                         shouldSwap = true;
                     }
                 }
+                else if (isColumnNumeric)
+                {
+                    if (stoi(data.data[j][column]) > stoi(data.data[j + 1][column]))
+                    {
+                        shouldSwap = true;
+                    }
+                }
+                
                 else 
                 {
-                    if (data.data[j][column] < data.data[j + 1][column]) 
+                    if (data.data[j][column] > data.data[j + 1][column]) 
                     {
                         shouldSwap = true;
                     }
