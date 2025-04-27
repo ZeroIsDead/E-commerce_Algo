@@ -4,53 +4,73 @@
 
 using namespace std;
 
+void printMenu(){
+    cout << "1) Number of Transcation for Days" << endl;
+};
+
+int inputHandl(int lowestNumber, int highestNumber){
+    int input;
+    cout << "Please enter you choice: ";
+    cin >> input;
+
+    while (input < lowestNumber || input > highestNumber){
+        cout << "Wrong Input";
+        inputHandl(lowestNumber,highestNumber);
+    }
+
+    return input;
+}
+
 int main() {
+    
+    int input;
+    
     // Create a Functions object
     Functions functions;
+    Timer timer = Timer();
  
-    // Use the specified file path
-    //string filepath = "transactions_cleaned.csv";
-    string filepath = "transactions_cleaned";
+    string transactionFilepath = "transactions_cleaned";
+    string reviewFilepath = "reviews_cleaned";
     
-    // Read the CSV file - THIS LINE WAS MISSING
-    cout << "Reading file: " << filepath << endl;
-    DataContainer2d data = functions.getdata(filepath);
+    DataContainer2d reviewData = functions.getdata(reviewFilepath);
 
-    // Check if there was an error reading the file
-    if (data.error == 1) {
-         cout << "Error occurred while reading the file." << endl;
-         return 0;
-    }
-    else{
-        // Display the data
+    printMenu();
+    input = inputHandl(1,1);
 
-        Timer timer = Timer();
-        cout << "\n==== CSV File Contents ====\n" << endl;
-
-        // timer.start();
-        // data.data = functions.mergeSort(data.data, data.y, 1);
-        // timer.end();
-
-        // timer.start();
-        // cout << functions.fibMonaccianSearch(data.data, data.y, "Mouse", 1) << endl;
-        // timer.end();
+    if (input == 1){
+        
+        DataContainer2d transactionData1 = functions.getdata(transactionFilepath);
+        DataContainer2d transactionData2 = functions.getdata(transactionFilepath);
+        DataContainer2d transactionData3 = functions.getdata(transactionFilepath);
+        DataContainer2d transactionData4 = functions.getdata(transactionFilepath);
 
         timer.start();
-        functions.bubbleSort(data, 4); 
-        timer.end(); 
+        functions.mergeSort(transactionData1.data, transactionData1.y, 4);
+        cout << "Mege Sort ";
+        timer.end();
 
-        int index = functions.binarySearch(data.data, data.y, 4, "01/01/2024");
+        timer.start();
+        functions.selectionSort(transactionData2, 4);
+        cout << "Selection Sort ";
+        timer.end();
+        
+        timer.start();
+        functions.bubbleSort(transactionData3,4);
+        cout << "Bubble Sort ";
+        timer.end();
+        
+        timer.start();
+        functions.quickSort(transactionData4,4);
+        cout << "Quick Sort";
+        timer.end();
 
-        functions.displayTabulatedData(data);
+        DataContainer2d repeatingData = functions.repeatingItem(transactionData4,4);
+        int totalTransacation = functions.NumberofTransactions(repeatingData);
 
-        cout << index << endl;
-        cout << data.y << endl;
+        functions.displayTabulatedData(repeatingData);
+        cout << endl;
+        cout << "The Total Number of Transactions is: " << totalTransacation << endl; 
 
-        // Show some stats about the data
-        cout << "\n==== File Statistics ====\n" << endl;
-        cout << "Number of columns: " << data.x << endl;
-        cout << "Number of data rows: " << data.y << endl;
-        cout << "Total cells: " << data.x * data.y << endl;    
     }
-    return 0;
+    
 }

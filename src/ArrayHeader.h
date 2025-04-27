@@ -493,56 +493,128 @@ public:
         For string interpolation, we use a simple heuristic based on first character ASCII value
         This is a simplified approach since true string interpolation is more complex
     */
-    int interpolationSearch(string** data, int size, int column, const string& target) {
-        // Check if array is empty
-        if (size <= 0) return -1;
+    DataContainer2d subDataContainer2d(DataContainer2d data, int first, int last){
         
+        if (data.error == 1 || first > last){
+            cout << "Error: Invalid data container or column index" << endl;
+            DataContainer2d errorContainer;
+            errorContainer.error = 1;
+            return errorContainer;;
+        }
+
+        DataContainer2d result;
+        result.error = 0;
+        result.y = (last - first) + 1;
+        result.x = data.x;
+        result.fields = data.fields;
+
+        result.data = new string*[result.y];
+
+        for (int i = 0; i < result.y; i++) {
+            result.data[i] = new string[result.x];
+            for (int j = 0; j < result.x; j++) {
+                result.data[i][j] = data.data[first + i][j];
+            }
+        }
+
+        return result;
+
+    }    
+    
+    void interpolationSearchRange(string** data, int size, int column, const string& target, int& first, int& last) 
+    {
+        first = -1;
+        last = -1;
+        
+        if (size <= 0) return;
+    
         int low = 0;
         int high = size - 1;
-        
-        // Continue until we find the element or narrow down to an empty subarray
-        while (low <= high && target >= data[low][column] && target <= data[high][column]) {
-            // No division by zero check
+    
+        // Find FIRST occurrence
+        while (low <= high && target >= data[low][column] && target <= data[high][column]) 
+        {
             if (low == high) {
-                if (data[low][column] == target) return low;
-                return -1;
+                if (data[low][column] == target) {
+                    first = low;
+                }
+                break;
             }
             
-            // Calculate the approximated position using interpolation formula
-            // For strings, we use a simple ASCII value based heuristic
             int targetChar = target.empty() ? 0 : target[0];
             int lowChar = data[low][column].empty() ? 0 : data[low][column][0];
             int highChar = data[high][column].empty() ? 0 : data[high][column][0];
-            
-            // Avoid division by zero
+    
             if (highChar == lowChar) {
-                // Sequential search in this case
                 for (int i = low; i <= high; i++) {
-                    if (data[i][column] == target) return i;
+                    if (data[i][column] == target) {
+                        first = i;
+                        break;
+                    }
                 }
-                return -1;
+                break;
             }
-            
-            // Calculate probe position
+    
             int pos = low + ((targetChar - lowChar) * (high - low)) / (highChar - lowChar);
-            
-            // Bound the position to prevent array out of bounds
             if (pos < low) pos = low;
             if (pos > high) pos = high;
-            
-            // If found, return the position
-            if (data[pos][column] == target) return pos;
-            
-            // If the value at pos is less than target, search in right sub-array
-            if (data[pos][column] < target) low = pos + 1;
-            
-            // If the value at pos is greater than target, search in left sub-array
-            else high = pos - 1;
+    
+            if (data[pos][column] == target) {
+                first = pos;
+                high = pos - 1; // Move left to find earlier match
+            }
+            else if (data[pos][column] < target) {
+                low = pos + 1;
+            }
+            else {
+                high = pos - 1;
+            }
         }
-        
-        // Element not found
-        return -1;
+    
+        // Find LAST occurrence
+        low = 0;
+        high = size - 1;
+    
+        while (low <= high && target >= data[low][column] && target <= data[high][column]) 
+        {
+            if (low == high) {
+                if (data[low][column] == target) {
+                    last = low;
+                }
+                break;
+            }
+            
+            int targetChar = target.empty() ? 0 : target[0];
+            int lowChar = data[low][column].empty() ? 0 : data[low][column][0];
+            int highChar = data[high][column].empty() ? 0 : data[high][column][0];
+    
+            if (highChar == lowChar) {
+                for (int i = high; i >= low; i--) {
+                    if (data[i][column] == target) {
+                        last = i;
+                        break;
+                    }
+                }
+                break;
+            }
+    
+            int pos = low + ((targetChar - lowChar) * (high - low)) / (highChar - lowChar);
+            if (pos < low) pos = low;
+            if (pos > high) pos = high;
+    
+            if (data[pos][column] == target) {
+                last = pos;
+                low = pos + 1; // Move right to find later match
+            }
+            else if (data[pos][column] < target) {
+                low = pos + 1;
+            }
+            else {
+                high = pos - 1;
+            }
+        }
     }
+   
 
 
     /*
@@ -553,7 +625,7 @@ public:
     DataContainer2d repeatingItem(DataContainer2d& data, int column) {
         // Check for valid input
         if (data.error == 1 || column < 0 || column >= data.x) {
-            cerr << "Error: Invalid data container or column index" << endl;
+            cout << "Error: Invalid data container or column index" << endl;
             DataContainer2d errorContainer;
             errorContainer.error = 1;
             return errorContainer;
@@ -625,19 +697,21 @@ public:
         
         This is a simple sequential search that works on both sorted and unsorted data
     */
-    int linearSearch(string** data, int size, int column, const string& target) {
-        // Check if array is empty
-        if (size <= 0) return -1;
-        
-        // Sequential search through the array
+    void linearSearchRange(string** data, int size, int column, const string& target, int& first, int& last) 
+    {
+        first = -1;
+        last = -1;
+    
+        if (size <= 0) return;
+    
         for (int i = 0; i < size; i++) {
             if (data[i][column] == target) {
-                return i;  // Found the target, return its index
+                if (first == -1) {
+                    first = i; // First time we find it
+                }
+                last = i; // Update last every time we find it
             }
         }
-        
-        // Element not found
-        return -1;
     }
 
     string** getSubArray(string** arr,int start, int end) {
@@ -827,85 +901,113 @@ public:
         }
     }
 
-    int binarySearch(string** data, int size, int column, const string& target) 
+    void binarySearchRange(string** data, int size, int column, const string& target, int& first, int& last) 
     {
-        
         int low = 0;
         int high = size - 1;
-        
-        // Detect if column contains dates, numeric or decimal values
+
         bool isDateColumn = false;
         bool isColumnNumeric = false;
         bool isColumnDecimal = false;
         
-        // Check for date format
         string val = data[0][column];
         if (val.length() >= 10 && val[2] == '/' && val[5] == '/') {
             isDateColumn = true;
-        } 
-        else{
-            // If not a date column, check if it's numeric
+        } else {
             isColumnNumeric = isNumeric(data[0][column]);
             isColumnDecimal = isDecimal(data[0][column]);
         }
 
-        
-        // Binary search
+        first = -1;
+        last = -1;
+
+        // Find FIRST occurrence
+        low = 0; high = size - 1;
         while (low <= high) 
         {
             int mid = low + (high - low) / 2;
-            
-            // Check if target is present at mid
             bool isEqual = false;
             bool isLess = false;
-            
+
             if (isDateColumn) {
-                // Date comparison
                 long midDate = parseDateString(data[mid][column]);
                 long targetDate = parseDateString(target);
                 isEqual = (midDate == targetDate);
                 isLess = (midDate > targetDate);
             } 
             else if (isColumnDecimal) {
-                // Decimal comparison
                 double midVal = stod(data[mid][column]);
                 double targetVal = stod(target);
                 isEqual = (midVal == targetVal);
                 isLess = (midVal > targetVal);
             }
             else if (isColumnNumeric) {
-                // Integer comparison
                 int midVal = stoi(data[mid][column]);
                 int targetVal = stoi(target);
                 isEqual = (midVal == targetVal);
                 isLess = (midVal > targetVal);
             }
             else {
-                // String comparison
                 isEqual = (data[mid][column] == target);
                 isLess = (data[mid][column] > target);
             }
-            
-            // If found at mid, return the position
-            if (isEqual){
-                return mid;
-            } 
-                
-            // If target is smaller, search in left half
-            if (isLess){
+
+            if (isEqual) {
+                first = mid;
+                high = mid - 1; // Move left to find earlier occurrence
+            }
+            else if (isLess) {
                 high = mid - 1;
             }
-                
-            // If target is larger, search in right half
-            else{
+            else {
                 low = mid + 1;
             }
-                
         }
-        
-        // Element not found
-        return -1;
+
+        // Find LAST occurrence
+        low = 0; high = size - 1;
+        while (low <= high) 
+        {
+            int mid = low + (high - low) / 2;
+            bool isEqual = false;
+            bool isLess = false;
+
+            if (isDateColumn) {
+                long midDate = parseDateString(data[mid][column]);
+                long targetDate = parseDateString(target);
+                isEqual = (midDate == targetDate);
+                isLess = (midDate > targetDate);
+            } 
+            else if (isColumnDecimal) {
+                double midVal = stod(data[mid][column]);
+                double targetVal = stod(target);
+                isEqual = (midVal == targetVal);
+                isLess = (midVal > targetVal);
+            }
+            else if (isColumnNumeric) {
+                int midVal = stoi(data[mid][column]);
+                int targetVal = stoi(target);
+                isEqual = (midVal == targetVal);
+                isLess = (midVal > targetVal);
+            }
+            else {
+                isEqual = (data[mid][column] == target);
+                isLess = (data[mid][column] > target);
+            }
+
+            if (isEqual) {
+                last = mid;
+                low = mid + 1; // Move right to find later occurrence
+            }
+            else if (isLess) {
+                high = mid - 1;
+            }
+            else {
+                low = mid + 1;
+            }
+        }
     }
+
 
 };
 
