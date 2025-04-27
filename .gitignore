@@ -31,3 +31,5 @@
 *.out
 *.app
 src/test.cpp
+
+src/tempCodeRunnerFile.h

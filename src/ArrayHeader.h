@@ -639,6 +639,33 @@ public:
         return -1;
     }
 
+    //Bubble Sort - Jia Yuan
+    void bubbleSort(, int rows, int fieldIndex, bool isDateColumn = false, bool isNumericColumn = false, bool iSDecimalColumn = false) 
+    {
+        for (int i = 0; i < rows - 1; i++) 
+        {
+            for (int j = 0; j < rows - i - 1; j++) 
+            {
+                if (isDateColumn) 
+                {
+                    if (parseDateString(data[j][fieldIndex]) > parseDateString(data[j + 1][fieldIndex])) 
+                    {
+                        swap(data[j], data[j + 1]);
+                    }
+                } 
+                
+                else 
+                {
+                    if (data[j][fieldIndex] > data[j + 1][fieldIndex]) 
+                    {
+                        swap(data[j], data[j + 1]);
+                    }
+                }
+            }
+        }
+    }
+
+    
 
 
 };
