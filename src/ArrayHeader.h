@@ -749,34 +749,76 @@ public:
     }
 
     //Bubble Sort - Jia Yuan
-    void bubbleSort(, int rows, int fieldIndex, bool isDateColumn = false, bool isNumericColumn = false, bool iSDecimalColumn = false) 
+    void bubbleSort(DataContainer2d data, int column) 
     {
-        for (int i = 0; i < rows - 1; i++) 
+        // Detect column types
+        bool isDateColumn = false;
+        bool isColumnNumeric = false;
+        bool isColumnDecimal = false;
+
+        // Check for date format
+        string val = data.data[0][column];
+        if (val.length() >= 10 && val[2] == '/' && val[5] == '/') {
+            isDateColumn = true;
+        } 
+        else{
+            // If not a date column, check if it's numeric
+            isColumnNumeric = isNumeric(data.data[0][column]);
+            isColumnDecimal = isDecimal(data.data[0][column]);
+            }
+
+        for (int i = 0; i < data.y; i++) 
         {
-            for (int j = 0; j < rows - i - 1; j++) 
+            bool swap = false;
+
+            for (int j = 0; j < data.y - i - 1; j++) 
             {
+                bool shouldSwap = false;
+                
                 if (isDateColumn) 
                 {
-                    if (parseDateString(data[j][fieldIndex]) > parseDateString(data[j + 1][fieldIndex])) 
+                    if (parseDateString(data.data[j][column]) < parseDateString(data.data[j + 1][column])) 
                     {
-                        swap(data[j], data[j + 1]);
-                    }
-                } 
-                
-                else 
-                {
-                    if (data[j][fieldIndex] > data[j + 1][fieldIndex]) 
-                    {
-                        swap(data[j], data[j + 1]);
+                        shouldSwap = true;
                     }
                 }
+                else if (isColumnNumeric)
+                {
+                    if (stoi(data.data[j][column]) < stoi(data.data[j + 1][column]))
+                    {
+                        shouldSwap = true;
+                    }
+                }
+                else if(isColumnDecimal)
+                {
+                    if (stod(data.data[j][column]) < stod(data.data[j + 1][column]))
+                    {
+                        shouldSwap = true;
+                    }
+                }
+                else 
+                {
+                    if (data.data[j][column] < data.data[j + 1][column]) 
+                    {
+                        shouldSwap = true;
+                    }
+                }
+            
+                if (shouldSwap) 
+                {
+                    string* temp = data.data[j];
+                    data.data[j] = data.data[j+1];
+                    data.data[j+1] = temp;
+                    swap = true;
+                }
+            }
+
+            if(!swap) 
+            {
+                break;
             }
         }
     }
-
-    
-
-
 };
 
 #endif // DATACONTAINER_H
