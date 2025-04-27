@@ -308,14 +308,11 @@ public:
                 stod(str); // Try converting to verify it's a valid decimal
                 return true;
             }
-            return false;
-
-        } 
-        catch (const std::invalid_argument&) {
-            return false;
-        } 
-        catch (const std::out_of_range&) {
-            return false;
+                return false;
+            } catch (const std::invalid_argument&) {
+                return false;
+            } catch (const std::out_of_range&) {
+                return false;
         }
     }
 
