@@ -10,7 +10,6 @@
 using namespace std;
 
 struct DataContainer2d {
-    // All members are public
     int error; // 1 - error | 0 - fine
     string* fields; // an array containing the fields (headers)
     string** data; // a 2D array containing each line of data
@@ -240,13 +239,33 @@ public:
         delete[] columnWidths;
     }
 
-    //Sort Algorithum
-    //Search Algorithum
+    /*
+        Function to count the number of trancation from repreating data set
+    */
+    int NumberofTransactions (DataContainer2d data){
+        int sum = 0;
+        for (int i = 0; i < data.y; i++){
+            sum = sum + stoi(data.data[i][1]);
+        }
+        return sum;
+    }
 
 
     /*
-    Helper function to parse date string in format "dd/mm/yyyy" and convert to comparable value
-    Returns a long integer representing the date (yyyymmdd) for easy comparison
+        Helper function to reverse the array 
+    */
+   void reverseArray(string** data, int size) {
+        for (int i = 0; i < size / 2; i++) {
+            string* temp = data[i];
+            data[i] = data[size - 1 - i];
+            data[size - 1 - i] = temp;
+        }
+    }
+
+
+    /*
+        Helper function to parse date string in format "dd/mm/yyyy" and convert to comparable value
+        Returns a long integer representing the date (yyyymmdd) for easy comparison
     */
     long parseDateString(const string& dateStr) {
         
@@ -264,106 +283,203 @@ public:
     }
 
     /*
-        Helper function for heapSort that maintains the heap property with special handling for date strings
-        Rearranges the heap rooted at index i to maintain max heap property
+        Checks if a string contains only numeric characters (integer)
+        Returns true if the string represents a number, false otherwise
     */
-    void heapify(string** data, int n, int i, int column, bool isDateColumn) {
-        int largest = i;
-        int left = 2 * i + 1;
-        int right = 2 * i + 2;
+    bool isNumeric(const string& str) {
         
-        // Compare based on whether it's a date column or regular string
-        if (isDateColumn){
-            // Date comparison
-            if (left < n && parseDateString(data[left][column]) > parseDateString(data[largest][column])){
-                largest = left;
+        try {
+            stoi(str);
+            return true;
+        } catch (const std::invalid_argument&) {
+            return false;
+        }
+
+    }
+
+    /*
+        Checks if a string is a decimal number (contains a dot and can be converted to double)
+        Returns true if the string represents a decimal number, false otherwise
+    */
+   bool isDecimal(const string& str) {
+        try {
+            stod(str);
+            return true;
+        } catch (const std::invalid_argument&) {
+            return false;
+        }
+    }
+
+     /*
+        Array partition function for QuickSort
+    */
+    int partition(string** data, int low, int high, int column, bool isDateColumn, bool isNumericColumn, bool isDecimalColumn) {
+        // Choose the rightmost element as pivot
+        string pivot = data[high][column];
+        int i = low - 1;  // Index of smaller element
+        
+        for (int j = low; j < high; j++) {
+            bool shouldSwap = false;
+            
+            if (isDateColumn) {
+                // Date comparison
+                if (parseDateString(data[j][column]) <= parseDateString(pivot)) {
+                    shouldSwap = true;
+                }
+            } 
+            else if (isNumericColumn) {
+                // Numeric comparison
+                if (stoi(data[j][column]) <  stoi(pivot)) {
+                    shouldSwap = true;
+                }
             }
-            if (right < n && parseDateString(data[right][column]) > parseDateString(data[largest][column])){
-                largest = right;
+            else if (isDecimalColumn) {
+
+                if (stod(data[j][column]) < stod(pivot)){
+                    shouldSwap = true;
+                }
             }
-        } 
+            else {
+                // Regular string comparison
+                if (data[j][column] <= pivot) {
+                    shouldSwap = true;
+                }
+            }
+            
+            if (shouldSwap) {
+                i++;
+                // Swap entire rows to maintain row relationships
+                string* temp = data[i];
+                data[i] = data[j];
+                data[j] = temp;
+            }
+        }
+        
+        // Swap pivot element with element at i+1
+        string* temp = data[i + 1];
+        data[i + 1] = data[high];
+        data[high] = temp;
+        
+        return i + 1;
+    }
+
+    /*
+        Recursive QuickSort helper function with numeric and date handling
+    */
+    void quickSortHelper(string** data, int low, int high, int column, bool isDateColumn, bool isNumericColumn, bool isDecimalColumn) {
+        if (low < high) {
+            // pi is the partitioning index, data[pi] is now at right place
+            int pi = partition(data, low, high, column, isDateColumn, isNumericColumn, isDecimalColumn);
+            
+            // Recursively sort elements before and after partition
+            quickSortHelper(data, low, pi - 1, column, isDateColumn, isNumericColumn, isDecimalColumn);
+            quickSortHelper(data, pi + 1, high, column, isDateColumn, isNumericColumn, isDecimalColumn);
+        }
+    }
+
+
+    /*
+         QuickSort that handles numeric columns, date column and normal strings
+    */
+    void quickSort(DataContainer2d data, int column) {
+        
+        if (data.error != 0){
+            cout << "Data entered is empty of invalid! " << endl;
+        }
         else{
-            // Regular string comparison
-            if (left < n && data[left][column] > data[largest][column]){
-                largest = left;   
-            }
-            
-            if (right < n && data[right][column] > data[largest][column]){
-                largest = right;
-            }  
-        }
-        
-        // If largest is not root
-        if (largest != i) {
-            // Swap entire rows to maintain row relationships
-            string* temp = data[i];
-            data[i] = data[largest];
-            data[largest] = temp;
-            
-            // Recursively heapify the affected sub-tree
-            heapify(data, n, largest, column, isDateColumn);
-        }
-    }
 
-    /*
-        Helper function to reverse the array 
-    */
-   
-    void reverseArray(string** data, int size) {
-        for (int i = 0; i < size / 2; i++) {
-            string* temp = data[i];
-            data[i] = data[size - 1 - i];
-            data[size - 1 - i] = temp;
-        }
-    }
-
-    /*
-        Sorts the 2D data array in ascending order based on values in the specified column
-        Has special handling for date columns in format "dd/mm/yyyy"
-        Returns the same DataContainer2d structure with data sorted
-    */
-    DataContainer2d heapSort(DataContainer2d data, int column) {
-        // Check for valid input
-        if (data.error == 1 || column < 0 || column >= data.x) {
-            cerr << "Error: Invalid data container or column index" << endl;
-            // Set error flag and return
-            data.error = 1;
-            return data;
-        }
-        
-        // Detect if this is a date column by checking format of first value
-        bool isDateColumn = false;
-        if (data.y > 0) {
+            // Detect column types
+            bool isDateColumn = false;
+            bool isColumnNumeric = false;
+            bool isColumnDecimal = false;
+            
+            // Check for date format
             string val = data.data[0][column];
-            // Simple check for date format "dd/mm/yyyy"
             if (val.length() >= 10 && val[2] == '/' && val[5] == '/') {
                 isDateColumn = true;
+            } 
+            else{
+                // If not a date column, check if it's numeric
+                isColumnNumeric = isNumeric(data.data[0][column]);
+                isColumnDecimal = isDecimal(data.data[0][column]);
+            }
+            
+            // Sort the data using QuickSort
+            quickSortHelper(data.data, 0, data.y - 1, column, isDateColumn, isColumnNumeric, isColumnDecimal);
+            
+        }
+        
+    }
+   
+    /*
+        Selection Sort that handles numeric columns (integers and decimals), date column and normal strings
+    */
+   void selectionSort(DataContainer2d data, int column) {
+        if (data.error != 0) {
+            cout << "Data entered is empty or invalid!" << endl;
+            return;
+        }
+        
+        // Detect column types
+        bool isDateColumn = false;
+        bool isColumnNumeric = false;
+        bool isColumnDecimal = false;
+        
+        // Check for date format
+        string val = data.data[0][column];
+        if (val.length() >= 10 && val[2] == '/' && val[5] == '/') {
+            isDateColumn = true;
+        } 
+        else {
+            // If not a date column, check if it's numeric or decimal
+            isColumnNumeric = isNumeric(data.data[0][column]);
+            isColumnDecimal = isDecimal(data.data[0][column]);
+        }
+        
+        // Selection Sort algorithm
+        for (int i = 0; i < data.y - 1; i++) {
+            // Find the minimum element in unsorted array
+            int min_idx = i;
+            
+            for (int j = i + 1; j < data.y; j++) {
+                bool shouldUpdate = false;
+                
+                if (isDateColumn) {
+                    // Date comparison
+                    if (parseDateString(data.data[j][column]) < parseDateString(data.data[min_idx][column])) {
+                        shouldUpdate = true;
+                    }
+                } else if (isColumnDecimal) {
+                    // Decimal comparison
+                    if (stod(data.data[j][column]) < stod(data.data[min_idx][column])) {
+                        shouldUpdate = true;
+                    }
+                } else if (isColumnNumeric) {
+                    // Integer comparison
+                    if (stoi(data.data[j][column]) < stoi(data.data[min_idx][column]) ) {
+                        shouldUpdate = true;
+                    }
+                } else {
+                    // Regular string comparison
+                    if (data.data[j][column] < data.data[min_idx][column]) {
+                        shouldUpdate = true;
+                    }
+                }
+                
+                if (shouldUpdate) {
+                    min_idx = j;
+                }
+            }
+            
+            // Swap the found minimum element with the first element
+            if (min_idx != i) {
+                string* temp = data.data[i];
+                data.data[i] = data.data[min_idx];
+                data.data[min_idx] = temp;
             }
         }
-        
-        // Sort the original data directly
-        // Build heap (rearrange array)
-        for (int i = data.y / 2 - 1; i >= 0; i--)
-            heapify(data.data, data.y, i, column, isDateColumn);
-        
-        // Extract elements from heap one by one
-        for (int i = data.y - 1; i > 0; i--) {
-            // Move current root to end
-            string* temp = data.data[0];
-            data.data[0] = data.data[i];
-            data.data[i] = temp;
-            
-            // Call heapify on the reduced heap
-            heapify(data.data, i, 0, column, isDateColumn);
-        }
-        
-        // Reverse the array to get ascending order (since heap sort produces descending)
-        reverseArray(data.data, data.y);
-        
-        // Return the original container with sorted data
-        return data;
     }
-
+   
     /*
         Performs interpolation search on a sorted string array
         Returns the index of the target string if found, otherwise -1
@@ -371,7 +487,6 @@ public:
         For string interpolation, we use a simple heuristic based on first character ASCII value
         This is a simplified approach since true string interpolation is more complex
     */
-
     int interpolationSearch(string** data, int size, int column, const string& target) {
         // Check if array is empty
         if (size <= 0) return -1;
@@ -423,13 +538,12 @@ public:
         return -1;
     }
 
+
     /*
         Finds unique values in the specified column and counts their occurrences
-        Uses interpolation search for efficient unique value lookup
         Assumes data is already sorted by the specified column
         Returns a DataContainer2d with two columns: the unique values and their counts
     */
-
     DataContainer2d repeatingItem(DataContainer2d& data, int column) {
         // Check for valid input
         if (data.error == 1 || column < 0 || column >= data.x) {
@@ -472,33 +586,6 @@ public:
             }
         }
         
-        // Now, let's use interpolation search to verify our counts
-        // This demonstrates the use of interpolation search on the sorted data
-        for (int i = 0; i < uniqueCount; i++) {
-            // Find the first occurrence of this value using interpolation search
-            int firstOccurrence = interpolationSearch(data.data, data.y, column, uniqueValues[i]);
-            
-            if (firstOccurrence != -1) {
-                // Once we find the first occurrence, we can count consecutive occurrences
-                // This is more efficient than calling interpolation search multiple times
-                int actualCount = 0;
-                
-                // Count forward from the found index
-                int j = firstOccurrence;
-                while (j < data.y && data.data[j][column] == uniqueValues[i]) {
-                    actualCount++;
-                    j++;
-                }
-                
-                // If our original count doesn't match, update it
-                // This should never happen if the data is properly sorted, but included as a validation
-                if (counts[i] != actualCount) {
-                    cerr << "Warning: Count mismatch detected for value " << uniqueValues[i] << endl;
-                    counts[i] = actualCount;
-                }
-            }
-        }
-        
         // Create result container
         DataContainer2d result;
         result.error = 0;
@@ -507,7 +594,7 @@ public:
         
         // Set up field names
         result.fields = new string[2];
-        result.fields[0] = "Value_" + data.fields[column]; // Use original column name
+        result.fields[0] = data.fields[column]; 
         result.fields[1] = "Count";
         
         // Allocate memory for data and populate it
@@ -525,6 +612,28 @@ public:
         return result;
     }
     
+    
+    /*
+        Performs linear search on a string array
+        Returns the index of the target string if found, otherwise -1
+        
+        This is a simple sequential search that works on both sorted and unsorted data
+    */
+    int linearSearch(string** data, int size, int column, const string& target) {
+        // Check if array is empty
+        if (size <= 0) return -1;
+        
+        // Sequential search through the array
+        for (int i = 0; i < size; i++) {
+            if (data[i][column] == target) {
+                return i;  // Found the target, return its index
+            }
+        }
+        
+        // Element not found
+        return -1;
+    }
+
     string** getSubArray(string** arr,int start, int end) {
         int length = end - start;
 
