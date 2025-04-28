@@ -1007,8 +1007,6 @@ public:
             }
         }
     }
-
-
 };
 
 #endif // DATACONTAINER_H

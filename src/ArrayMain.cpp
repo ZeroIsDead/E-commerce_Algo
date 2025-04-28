@@ -46,7 +46,7 @@ int main() {
 
         timer.start();
         functions.mergeSort(transactionData1.data, transactionData1.y, 4);
-        cout << "Mege Sort ";
+        cout << "Merge Sort ";
         timer.end();
 
         timer.start();
