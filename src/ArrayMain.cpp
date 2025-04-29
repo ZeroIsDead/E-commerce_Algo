@@ -19,7 +19,7 @@ int inputHandl(int lowestNumber, int highestNumber){
         cout << "Wrong Input";
         inputHandl(lowestNumber,highestNumber);
     }
-
+    cout << endl;
     return input;
 }
 
@@ -45,8 +45,8 @@ int main() {
         DataContainer2d transactionData4 = functions.getdata(transactionFilepath);
 
         timer.start();
-        functions.mergeSort(transactionData1.data, transactionData1.y, 4);
-        cout << "Mege Sort ";
+        functions.mergeSort(transactionData1, 4);
+        cout << "Merge Sort ";
         timer.end();
 
         timer.start();
@@ -65,6 +65,8 @@ int main() {
         timer.end();
 
         DataContainer2d repeatingData = functions.repeatingItem(transactionData4,4);
+        functions.mergeSort(repeatingData,1);
+
         int totalTransacation = functions.NumberofTransactions(repeatingData);
 
         functions.displayTabulatedData(repeatingData);
@@ -74,7 +76,6 @@ int main() {
         main();
     }
     else if (input == 2){
-
         int first, last;
 
         DataContainer2d transactionData1 = functions.getdata(transactionFilepath);
@@ -85,13 +86,13 @@ int main() {
         int totalDataSize = transactionData1.y;
 
         timer.start();
-        functions.quickSort(transactionData1,5);
-        cout << "Quick Sort";
+        functions.bubbleSort(transactionData1,5);
+        cout << "Bubble Sort";
         timer.end();
 
         timer.start();
-        functions.quickSort(transactionData2,5);
-        cout << "Quick Sort";
+        functions.selectionSort(transactionData2,5);
+        cout << "Select Sort";
         timer.end();
 
         timer.start();
@@ -100,8 +101,8 @@ int main() {
         timer.end();
 
         timer.start();
-        functions.quickSort(transactionData4,5);
-        cout << "Quick Sort";
+        functions.mergeSort(transactionData4,5);
+        cout << "Merge Sort";
         timer.end();
 
         timer.start();
@@ -111,7 +112,7 @@ int main() {
 
         transactionData1 = functions.subDataContainer2d(transactionData1, first, last);
         
-        functions.quickSort(transactionData1, 2);
+        functions.bubbleSort(transactionData1, 2);
 
         timer.start();
         functions.binarySearchRange(transactionData1.data, transactionData1.y, 2, "Electronics", first, last);
@@ -127,7 +128,7 @@ int main() {
 
         transactionData2 = functions.subDataContainer2d(transactionData2, first, last);
         
-        functions.quickSort(transactionData2, 2);
+        functions.selectionSort(transactionData2, 2);
 
         timer.start();
         functions.linearSearchRange(transactionData2.data, transactionData2.y, 2, "Electronics", first, last);
@@ -151,8 +152,24 @@ int main() {
         timer.end();
 
         transactionData3 = functions.subDataContainer2d(transactionData3, first, last);
+
+        timer.start();
+        functions.fibonacciSearchRange(transactionData4.data, transactionData4.y, 5, "Credit Card", first, last);
+        cout << "Fibonacci Search for Credit Card ";
+        timer.end();
+
+        transactionData4 = functions.subDataContainer2d(transactionData4, first, last);
         
-        functions.displayTabulatedData(transactionData1);
+        functions.mergeSort(transactionData4, 2);
+
+        timer.start();
+        functions.fibonacciSearchRange(transactionData4.data, transactionData4.y, 2, "Electronics", first, last);
+        cout << "Fibonacci Search for Electronics ";
+        timer.end();
+
+        transactionData4 = functions.subDataContainer2d(transactionData4, first, last);
+
+        functions.displayTabulatedData(transactionData4);
 
         double percentage = ((double)transactionData1.y/(double)totalDataSize)*100;
 

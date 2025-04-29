@@ -36,61 +36,63 @@ class Timer {
 };
 
 class Functions {
-public:
+private:
     /*
         Function to Count the number of colums in one single line, (in CSV file).
         Returns the number of columns as integer
     */
-    int countColumns(const string& line) {
-        int count = 1; // Start with 1 for the first field
-        
-        for (size_t i = 0; i < line.length(); i++) {
-            if (line[i] == ',') {
-                count++;
-            }
-        }
-        
-        return count;
-    }
+   int countColumns(const string& line) {
+    int count = 1; // Start with 1 for the first field
     
-    /*
-        Function to Count the number of rows in in CSV file. 
-        Returns the number of rows as integer
-    */
-    int countRows(const string& filename) {
-        ifstream file(filename);
-        int count = 0;
-        string line;
-        
-        if (!file.is_open()) {
-            return 0;
-        }
-        
-        while (getline(file, line)) {
+    for (size_t i = 0; i < line.length(); i++) {
+        if (line[i] == ',') {
             count++;
         }
-        
-        file.close();
-        return count;
     }
     
-    // Helper function to split a line by comma
-    void splitLine(const string& line, string* result, int maxCols) {
-        int col = 0;
-        string current = "";
-        
-        for (size_t i = 0; i <= line.length(); i++) {
-            if (i == line.length() || line[i] == ',') {
-                if (col < maxCols) {
-                    result[col] = current;
-                    col++;
-                }
-                current = "";
-            } else {
-                current += line[i];
+    return count;
+}
+
+/*
+    Function to Count the number of rows in in CSV file. 
+    Returns the number of rows as integer
+*/
+int countRows(const string& filename) {
+    ifstream file(filename);
+    int count = 0;
+    string line;
+    
+    if (!file.is_open()) {
+        return 0;
+    }
+    
+    while (getline(file, line)) {
+        count++;
+    }
+    
+    file.close();
+    return count;
+}
+
+// Helper function to split a line by comma
+void splitLine(const string& line, string* result, int maxCols) {
+    int col = 0;
+    string current = "";
+    
+    for (size_t i = 0; i <= line.length(); i++) {
+        if (i == line.length() || line[i] == ',') {
+            if (col < maxCols) {
+                result[col] = current;
+                col++;
             }
+            current = "";
+        } else {
+            current += line[i];
         }
     }
+}
+
+public:
     
     /*
         DataContainer2d Stuct that take the CSV filename as argument.
@@ -614,8 +616,6 @@ public:
             }
         }
     }
-   
-
 
     /*
         Finds unique values in the specified column and counts their occurrences
@@ -726,7 +726,7 @@ public:
         return subArray;
     }
 
-
+    /*
     string** mergeSort(string** arr, int length, int fieldIndex) {
         if (length <= 1) {
             return arr;
@@ -771,17 +771,18 @@ public:
 
         return sortedArr;
     }
-
-
+    */
+    
+    /*
     int fibMonaccianSearch(string** arr, int n, const string& item, const int fieldIndex)
     {
-        /* Initialize fibonacci numbers */
+        //Initialize fibonacci numbers
         int fibMMm2 = 0; // (m-2)'th Fibonacci No.
         int fibMMm1 = 1; // (m-1)'th Fibonacci No.
         int fibM = fibMMm2 + fibMMm1; // m'th Fibonacci
      
-        /* fibM is going to store the smallest Fibonacci
-           Number greater than or equal to n */
+        // fibM is going to store the smallest Fibonacci
+        //   Number greater than or equal to n
         while (fibM < n) {
             fibMMm2 = fibMMm1;
             fibMMm1 = fibM;
@@ -791,15 +792,15 @@ public:
         // Marks the eliminated range from front
         int offset = -1;
      
-        /* while there are elements to be inspected. Note that
-           we compare arr[fibMm2] with x. When fibM becomes 1,
-           fibMm2 becomes 0 */
+        // while there are elements to be inspected. Note that
+        // we compare arr[fibMm2] with x. When fibM becomes 1,
+        // fibMm2 becomes 0
         while (fibM > 1) {
             // Check if fibMm2 is a valid location
             int i = min(offset + fibMMm2, n - 1);
      
-            /* If x is greater than the value at index fibMm2,
-               cut the subarray array from offset to i */
+            // If x is greater than the value at index fibMm2,
+            //   cut the subarray array from offset to i
             if (arr[i][fieldIndex] < item) {
                 fibM = fibMMm1;
                 fibMMm1 = fibMMm2;
@@ -807,26 +808,28 @@ public:
                 offset = i;
             }
      
-            /* If x is greater than the value at index fibMm2,
-               cut the subarray after i+1  */
+            // If x is greater than the value at index fibMm2,
+            // cut the subarray after i+1
             else if (arr[i][fieldIndex] > item) {
                 fibM = fibMMm2;
                 fibMMm1 = fibMMm1 - fibMMm2;
                 fibMMm2 = fibM - fibMMm1;
             }
      
-            /* element found. return index */
+            // element found. return index
             else
                 return i;
         }
      
-        /* comparing the last element with x */
+        // comparing the last element with x
         if (fibMMm1 && arr[offset + 1][fieldIndex] == item)
             return offset + 1;
      
-        /*element not found. return -1 */
+        // element not found. return -1
         return -1;
     }
+    */
+
 
     //Bubble Sort - Jia Yuan
     void bubbleSort(DataContainer2d data, int column) 
@@ -1008,6 +1011,295 @@ public:
         }
     }
 
+    /*
+        Merge function for MergeSort that handles different data types
+    */
+    void merge(string** arr, int left, int mid, int right, int column, bool isDateColumn, bool isNumericColumn, bool isDecimalColumn) {
+        int n1 = mid - left + 1;
+        int n2 = right - mid;
+        
+        // Create temp arrays
+        string** leftArr = new string*[n1];
+        string** rightArr = new string*[n2];
+        
+        // Copy data to temp arrays
+        for (int i = 0; i < n1; i++)
+            leftArr[i] = arr[left + i];
+            
+        for (int j = 0; j < n2; j++)
+            rightArr[j] = arr[mid + 1 + j];
+        
+        // Merge the temp arrays back into arr[left..right]
+        int i = 0; // Initial index of first subarray
+        int j = 0; // Initial index of second subarray
+        int k = left; // Initial index of merged subarray
+        
+        while (i < n1 && j < n2) {
+            bool shouldTakeLeft = false;
+            
+            if (isDateColumn) {
+                // Date comparison
+                if (parseDateString(leftArr[i][column]) <= parseDateString(rightArr[j][column])) {
+                    shouldTakeLeft = true;
+                }
+            }
+            else if (isDecimalColumn) {
+                // Decimal comparison
+                if (stod(leftArr[i][column]) <= stod(rightArr[j][column])) {
+                    shouldTakeLeft = true;
+                }
+            } 
+            else if (isNumericColumn) {
+                // Numeric comparison
+                if (stoi(leftArr[i][column]) <= stoi(rightArr[j][column])) {
+                    shouldTakeLeft = true;
+                }
+            }
+            else {
+                // Regular string comparison
+                if (leftArr[i][column] <= rightArr[j][column]) {
+                    shouldTakeLeft = true;
+                }
+            }
+            
+            if (shouldTakeLeft) {
+                arr[k] = leftArr[i];
+                i++;
+            } else {
+                arr[k] = rightArr[j];
+                j++;
+            }
+            k++;
+        }
+        
+        // Copy the remaining elements of leftArr[]
+        while (i < n1) {
+            arr[k] = leftArr[i];
+            i++;
+            k++;
+        }
+        
+        // Copy the remaining elements of rightArr[]
+        while (j < n2) {
+            arr[k] = rightArr[j];
+            j++;
+            k++;
+        }
+        
+        // Free memory
+        delete[] leftArr;
+        delete[] rightArr;
+    }
+
+    /*
+        Recursive MergeSort helper function with numeric and date handling
+    */
+    void mergeSortHelper(string** arr, int left, int right, int column, bool isDateColumn, bool isNumericColumn, bool isDecimalColumn) {
+        if (left < right) {
+            // Find the middle point
+            int mid = left + (right - left) / 2;
+            
+            // Sort first and second halves
+            mergeSortHelper(arr, left, mid, column, isDateColumn, isNumericColumn, isDecimalColumn);
+            mergeSortHelper(arr, mid + 1, right, column, isDateColumn, isNumericColumn, isDecimalColumn);
+            
+            // Merge the sorted halves
+            merge(arr, left, mid, right, column, isDateColumn, isNumericColumn, isDecimalColumn);
+        }
+    }
+
+    /*
+        MergeSort that handles numeric columns, date column and normal strings
+    */
+    void mergeSort(DataContainer2d data, int column) {
+        if (data.error != 0) {
+            cout << "Data entered is empty or invalid!" << endl;
+            return;
+        }
+        
+        // Detect column types
+        bool isDateColumn = false;
+        bool isColumnNumeric = false;
+        bool isColumnDecimal = false;
+        
+        // Check for date format
+        string val = data.data[0][column];
+        if (val.length() >= 10 && val[2] == '/' && val[5] == '/') {
+            isDateColumn = true;
+        } 
+        else {
+            // If not a date column, check if it's numeric or decimal
+            isColumnDecimal = isDecimal(data.data[0][column]);
+            isColumnNumeric = isNumeric(data.data[0][column]);
+        }
+        
+        // Sort the data using MergeSort
+        mergeSortHelper(data.data, 0, data.y - 1, column, isDateColumn, isColumnNumeric, isColumnDecimal);
+    }
+
+    /*
+        Fibonacci search that handles numeric columns, date column and normal strings
+        Returns two indices: first and last occurrence of the target value
+    */
+    void fibonacciSearchRange(string** data, int size, int column, const string& target, int& first, int& last) {
+        first = -1;
+        last = -1;
+        
+        if (size <= 0) return;
+        
+        // Detect column types
+        bool isDateColumn = false;
+        bool isColumnNumeric = false;
+        bool isColumnDecimal = false;
+        
+        // Check for date format
+        string val = data[0][column];
+        if (val.length() >= 10 && val[2] == '/' && val[5] == '/') {
+            isDateColumn = true;
+        } 
+        else {
+            // If not a date column, check if it's numeric or decimal
+            isColumnNumeric = isNumeric(data[0][column]);
+            isColumnDecimal = isDecimal(data[0][column]);
+        }
+        
+        // Find FIRST occurrence using Fibonacci search
+        int fibMMm2 = 0;  // (m-2)'th Fibonacci Number
+        int fibMMm1 = 1;  // (m-1)'th Fibonacci Number
+        int fibM = fibMMm2 + fibMMm1;  // m'th Fibonacci Number
+        
+        // Compute smallest Fibonacci number greater than or equal to size
+        while (fibM < size) {
+            fibMMm2 = fibMMm1;
+            fibMMm1 = fibM;
+            fibM = fibMMm2 + fibMMm1;
+        }
+        
+        // Mark the eliminated range from front
+        int offset = -1;
+        
+        // Do while loop for Fibonacci search
+        while (fibM > 1) {
+            // Check if fibMm2 is a valid location
+            int i = min(offset + fibMMm2, size - 1);
+            
+            bool isEqual = false;
+            bool isLess = false;
+            
+            if (isDateColumn) {
+                long itemDate = parseDateString(target);
+                long currDate = parseDateString(data[i][column]);
+                isEqual = (itemDate == currDate);
+                isLess = (itemDate > currDate);
+            } 
+            else if (isColumnDecimal) {
+                double itemVal = stod(target);
+                double currVal = stod(data[i][column]);
+                isEqual = (itemVal == currVal);
+                isLess = (itemVal > currVal);
+            }
+            else if (isColumnNumeric) {
+                int itemVal = stoi(target);
+                int currVal = stoi(data[i][column]);
+                isEqual = (itemVal == currVal);
+                isLess = (itemVal > currVal);
+            }
+            else {
+                isEqual = (target == data[i][column]);
+                isLess = (target > data[i][column]);
+            }
+            
+            if (isEqual) {
+                // We found the element, now find the first occurrence
+                first = i;
+                while (first > 0) {
+                    bool prevEqual = false;
+                    
+                    if (isDateColumn) {
+                        prevEqual = (parseDateString(data[first-1][column]) == parseDateString(target));
+                    } 
+                    else if (isColumnDecimal) {
+                        prevEqual = (stod(data[first-1][column]) == stod(target));
+                    }
+                    else if (isColumnNumeric) {
+                        prevEqual = (stoi(data[first-1][column]) == stoi(target));
+                    }
+                    else {
+                        prevEqual = (data[first-1][column] == target);
+                    }
+                    
+                    if (prevEqual) {
+                        first--;
+                    } else {
+                        break;
+                    }
+                }
+                break;
+            }
+            else if (isLess) {
+                // Cut the subarray from offset to i
+                fibM = fibMMm1;
+                fibMMm1 = fibMMm2;
+                fibMMm2 = fibM - fibMMm1;
+                offset = i;
+            }
+            else {
+                // Cut the subarray after i+1
+                fibM = fibMMm2;
+                fibMMm1 = fibMMm1 - fibMMm2;
+                fibMMm2 = fibM - fibMMm1;
+            }
+        }
+        
+        // Compare the last element if we haven't found first yet
+        if (first == -1 && fibMMm1 && offset + 1 < size) {
+            bool isEqual = false;
+            
+            if (isDateColumn) {
+                isEqual = (parseDateString(data[offset+1][column]) == parseDateString(target));
+            } 
+            else if (isColumnDecimal) {
+                isEqual = (stod(data[offset+1][column]) == stod(target));
+            }
+            else if (isColumnNumeric) {
+                isEqual = (stoi(data[offset+1][column]) == stoi(target));
+            }
+            else {
+                isEqual = (data[offset+1][column] == target);
+            }
+            
+            if (isEqual) {
+                first = offset + 1;
+            }
+        }
+        
+        // If we found first, now find last
+        if (first != -1) {
+            last = first;
+            while (last < size - 1) {
+                bool nextEqual = false;
+                
+                if (isDateColumn) {
+                    nextEqual = (parseDateString(data[last+1][column]) == parseDateString(target));
+                } 
+                else if (isColumnDecimal) {
+                    nextEqual = (stod(data[last+1][column]) == stod(target));
+                }
+                else if (isColumnNumeric) {
+                    nextEqual = (stoi(data[last+1][column]) == stoi(target));
+                }
+                else {
+                    nextEqual = (data[last+1][column] == target);
+                }
+                
+                if (nextEqual) {
+                    last++;
+                } else {
+                    break;
+                }
+            }
+        }
+    }
 
 };
 
