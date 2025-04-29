@@ -925,7 +925,7 @@ public:
         low = 0; high = size - 1;
         while (low <= high) 
         {
-            int mid = low + (high - low) / 2;
+            int mid = (high+low) / 2;
             bool isEqual = false;
             bool isLess = false;
 
@@ -968,7 +968,7 @@ public:
         low = 0; high = size - 1;
         while (low <= high) 
         {
-            int mid = low + (high - low) / 2;
+            int mid = (high+low) / 2;
             bool isEqual = false;
             bool isLess = false;
 
