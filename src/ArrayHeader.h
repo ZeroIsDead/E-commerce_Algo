@@ -41,56 +41,276 @@ private:
         Function to Count the number of colums in one single line, (in CSV file).
         Returns the number of columns as integer
     */
-   int countColumns(const string& line) {
-    int count = 1; // Start with 1 for the first field
+    int countColumns(const string& line) {
+        int count = 1; // Start with 1 for the first field
     
-    for (size_t i = 0; i < line.length(); i++) {
-        if (line[i] == ',') {
+        for (size_t i = 0; i < line.length(); i++) {
+            if (line[i] == ',') {
+                count++;
+            }
+        }
+    
+        return count;
+    }
+
+    /*
+        Function to Count the number of rows in in CSV file. 
+        Returns the number of rows as integer
+    */
+    int countRows(const string& filename) {
+        ifstream file(filename);
+        int count = 0;
+        string line;
+        
+        if (!file.is_open()) {
+            return 0;
+        }
+        
+        while (getline(file, line)) {
             count++;
         }
+        
+        file.close();
+        return count;
     }
-    
-    return count;
-}
 
-/*
-    Function to Count the number of rows in in CSV file. 
-    Returns the number of rows as integer
-*/
-int countRows(const string& filename) {
-    ifstream file(filename);
-    int count = 0;
-    string line;
-    
-    if (!file.is_open()) {
-        return 0;
-    }
-    
-    while (getline(file, line)) {
-        count++;
-    }
-    
-    file.close();
-    return count;
-}
-
-// Helper function to split a line by comma
-void splitLine(const string& line, string* result, int maxCols) {
-    int col = 0;
-    string current = "";
-    
-    for (size_t i = 0; i <= line.length(); i++) {
-        if (i == line.length() || line[i] == ',') {
-            if (col < maxCols) {
-                result[col] = current;
-                col++;
+    // Helper function to split a line by comma
+    void splitLine(const string& line, string* result, int maxCols) {
+        int col = 0;
+        string current = "";
+        
+        for (size_t i = 0; i <= line.length(); i++) {
+            if (i == line.length() || line[i] == ',') {
+                if (col < maxCols) {
+                    result[col] = current;
+                    col++;
+                }
+                current = "";
+            } else {
+                current += line[i];
             }
-            current = "";
-        } else {
-            current += line[i];
         }
     }
-}
+
+    
+    /*
+        Helper function to parse date string in format "dd/mm/yyyy" and convert to comparable value
+        Returns a long integer representing the date (yyyymmdd) for easy comparison
+    */
+    long parseDateString(const string& dateStr) {
+        
+        // Expected format: "dd/mm/yyyy"
+        if (dateStr.length() < 10){
+            return 0; // Invalid date format
+        }  
+        
+        int day = stoi(dateStr.substr(0, 2));
+        int month = stoi(dateStr.substr(3, 2));
+        int year = stoi(dateStr.substr(6, 4));
+        
+        // Convert to format yyyymmdd for proper comparison
+        return year * 10000 + month * 100 + day;
+    }
+
+    /*
+        Checks if a string contains only numeric characters (integer)
+        Returns true if the string represents a number, false otherwise
+    */
+    bool isNumeric(const string& str) {
+        
+        try {
+            stoi(str);
+            return true;
+        } catch (const std::invalid_argument&) {
+            return false;
+        }
+
+    }
+
+    /*
+        Checks if a string is a decimal number (contains a dot and can be converted to double)
+        Returns true if the string represents a decimal number, false otherwise
+    */
+   bool isDecimal(const string& str) {
+        try {
+            // Check if the string contains a decimal point
+            if (str.find('.') != string::npos) {
+                stod(str); // Try converting to verify it's a valid decimal
+                return true;
+            }
+                return false;
+            } catch (const std::invalid_argument&) {
+                return false;
+            } catch (const std::out_of_range&) {
+                return false;
+        }
+    }
+
+     /*
+        Array partition function for QuickSort
+    */
+    int partition(string** data, int low, int high, int column, bool isDateColumn, bool isNumericColumn, bool isDecimalColumn) {
+        // Choose the rightmost element as pivot
+        string pivot = data[high][column];
+        int i = low - 1;  // Index of smaller element
+        
+        for (int j = low; j < high; j++) {
+            bool shouldSwap = false;
+            
+            if (isDateColumn) {
+                // Date comparison
+                if (parseDateString(data[j][column]) <= parseDateString(pivot)) {
+                    shouldSwap = true;
+                }
+            } 
+            else if (isNumericColumn) {
+                // Numeric comparison
+                if (stoi(data[j][column]) <  stoi(pivot)) {
+                    shouldSwap = true;
+                }
+            }
+            else if (isDecimalColumn) {
+
+                if (stod(data[j][column]) < stod(pivot)){
+                    shouldSwap = true;
+                }
+            }
+            else {
+                // Regular string comparison
+                if (data[j][column] <= pivot) {
+                    shouldSwap = true;
+                }
+            }
+            
+            if (shouldSwap) {
+                i++;
+                // Swap entire rows to maintain row relationships
+                string* temp = data[i];
+                data[i] = data[j];
+                data[j] = temp;
+            }
+        }
+        
+        // Swap pivot element with element at i+1
+        string* temp = data[i + 1];
+        data[i + 1] = data[high];
+        data[high] = temp;
+        
+        return i + 1;
+    }
+
+    /*
+        Recursive QuickSort helper function with numeric and date handling
+    */
+    void quickSortHelper(string** data, int low, int high, int column, bool isDateColumn, bool isNumericColumn, bool isDecimalColumn) {
+        if (low < high) {
+            // pi is the partitioning index, data[pi] is now at right place
+            int pi = partition(data, low, high, column, isDateColumn, isNumericColumn, isDecimalColumn);
+            
+            // Recursively sort elements before and after partition
+            quickSortHelper(data, low, pi - 1, column, isDateColumn, isNumericColumn, isDecimalColumn);
+            quickSortHelper(data, pi + 1, high, column, isDateColumn, isNumericColumn, isDecimalColumn);
+        }
+    }
+
+    
+    /*
+        Merge function for MergeSort that handles different data types
+    */
+    void merge(string** arr, int left, int mid, int right, int column, bool isDateColumn, bool isNumericColumn, bool isDecimalColumn) {
+        int n1 = mid - left + 1;
+        int n2 = right - mid;
+        
+        // Create temp arrays
+        string** leftArr = new string*[n1];
+        string** rightArr = new string*[n2];
+        
+        // Copy data to temp arrays
+        for (int i = 0; i < n1; i++)
+            leftArr[i] = arr[left + i];
+            
+        for (int j = 0; j < n2; j++)
+            rightArr[j] = arr[mid + 1 + j];
+        
+        // Merge the temp arrays back into arr[left..right]
+        int i = 0; // Initial index of first subarray
+        int j = 0; // Initial index of second subarray
+        int k = left; // Initial index of merged subarray
+        
+        while (i < n1 && j < n2) {
+            bool shouldTakeLeft = false;
+            
+            if (isDateColumn) {
+                // Date comparison
+                if (parseDateString(leftArr[i][column]) <= parseDateString(rightArr[j][column])) {
+                    shouldTakeLeft = true;
+                }
+            }
+            else if (isDecimalColumn) {
+                // Decimal comparison
+                if (stod(leftArr[i][column]) <= stod(rightArr[j][column])) {
+                    shouldTakeLeft = true;
+                }
+            } 
+            else if (isNumericColumn) {
+                // Numeric comparison
+                if (stoi(leftArr[i][column]) <= stoi(rightArr[j][column])) {
+                    shouldTakeLeft = true;
+                }
+            }
+            else {
+                // Regular string comparison
+                if (leftArr[i][column] <= rightArr[j][column]) {
+                    shouldTakeLeft = true;
+                }
+            }
+            
+            if (shouldTakeLeft) {
+                arr[k] = leftArr[i];
+                i++;
+            } else {
+                arr[k] = rightArr[j];
+                j++;
+            }
+            k++;
+        }
+        
+        // Copy the remaining elements of leftArr[]
+        while (i < n1) {
+            arr[k] = leftArr[i];
+            i++;
+            k++;
+        }
+        
+        // Copy the remaining elements of rightArr[]
+        while (j < n2) {
+            arr[k] = rightArr[j];
+            j++;
+            k++;
+        }
+        
+        // Free memory
+        delete[] leftArr;
+        delete[] rightArr;
+    }
+
+    /*
+        Recursive MergeSort helper function with numeric and date handling
+    */
+    void mergeSortHelper(string** arr, int left, int right, int column, bool isDateColumn, bool isNumericColumn, bool isDecimalColumn) {
+        if (left < right) {
+            // Find the middle point
+            int mid = left + (right - left) / 2;
+            
+            // Sort first and second halves
+            mergeSortHelper(arr, left, mid, column, isDateColumn, isNumericColumn, isDecimalColumn);
+            mergeSortHelper(arr, mid + 1, right, column, isDateColumn, isNumericColumn, isDecimalColumn);
+            
+            // Merge the sorted halves
+            merge(arr, left, mid, right, column, isDateColumn, isNumericColumn, isDecimalColumn);
+        }
+    }
+
 
 public:
     
@@ -261,127 +481,6 @@ public:
             string* temp = data[i];
             data[i] = data[size - 1 - i];
             data[size - 1 - i] = temp;
-        }
-    }
-
-
-    /*
-        Helper function to parse date string in format "dd/mm/yyyy" and convert to comparable value
-        Returns a long integer representing the date (yyyymmdd) for easy comparison
-    */
-    long parseDateString(const string& dateStr) {
-        
-        // Expected format: "dd/mm/yyyy"
-        if (dateStr.length() < 10){
-            return 0; // Invalid date format
-        }  
-        
-        int day = stoi(dateStr.substr(0, 2));
-        int month = stoi(dateStr.substr(3, 2));
-        int year = stoi(dateStr.substr(6, 4));
-        
-        // Convert to format yyyymmdd for proper comparison
-        return year * 10000 + month * 100 + day;
-    }
-
-    /*
-        Checks if a string contains only numeric characters (integer)
-        Returns true if the string represents a number, false otherwise
-    */
-    bool isNumeric(const string& str) {
-        
-        try {
-            stoi(str);
-            return true;
-        } catch (const std::invalid_argument&) {
-            return false;
-        }
-
-    }
-
-    /*
-        Checks if a string is a decimal number (contains a dot and can be converted to double)
-        Returns true if the string represents a decimal number, false otherwise
-    */
-   bool isDecimal(const string& str) {
-        try {
-            // Check if the string contains a decimal point
-            if (str.find('.') != string::npos) {
-                stod(str); // Try converting to verify it's a valid decimal
-                return true;
-            }
-                return false;
-            } catch (const std::invalid_argument&) {
-                return false;
-            } catch (const std::out_of_range&) {
-                return false;
-        }
-    }
-
-     /*
-        Array partition function for QuickSort
-    */
-    int partition(string** data, int low, int high, int column, bool isDateColumn, bool isNumericColumn, bool isDecimalColumn) {
-        // Choose the rightmost element as pivot
-        string pivot = data[high][column];
-        int i = low - 1;  // Index of smaller element
-        
-        for (int j = low; j < high; j++) {
-            bool shouldSwap = false;
-            
-            if (isDateColumn) {
-                // Date comparison
-                if (parseDateString(data[j][column]) <= parseDateString(pivot)) {
-                    shouldSwap = true;
-                }
-            } 
-            else if (isNumericColumn) {
-                // Numeric comparison
-                if (stoi(data[j][column]) <  stoi(pivot)) {
-                    shouldSwap = true;
-                }
-            }
-            else if (isDecimalColumn) {
-
-                if (stod(data[j][column]) < stod(pivot)){
-                    shouldSwap = true;
-                }
-            }
-            else {
-                // Regular string comparison
-                if (data[j][column] <= pivot) {
-                    shouldSwap = true;
-                }
-            }
-            
-            if (shouldSwap) {
-                i++;
-                // Swap entire rows to maintain row relationships
-                string* temp = data[i];
-                data[i] = data[j];
-                data[j] = temp;
-            }
-        }
-        
-        // Swap pivot element with element at i+1
-        string* temp = data[i + 1];
-        data[i + 1] = data[high];
-        data[high] = temp;
-        
-        return i + 1;
-    }
-
-    /*
-        Recursive QuickSort helper function with numeric and date handling
-    */
-    void quickSortHelper(string** data, int low, int high, int column, bool isDateColumn, bool isNumericColumn, bool isDecimalColumn) {
-        if (low < high) {
-            // pi is the partitioning index, data[pi] is now at right place
-            int pi = partition(data, low, high, column, isDateColumn, isNumericColumn, isDecimalColumn);
-            
-            // Recursively sort elements before and after partition
-            quickSortHelper(data, low, pi - 1, column, isDateColumn, isNumericColumn, isDecimalColumn);
-            quickSortHelper(data, pi + 1, high, column, isDateColumn, isNumericColumn, isDecimalColumn);
         }
     }
 
@@ -726,111 +825,6 @@ public:
         return subArray;
     }
 
-    /*
-    string** mergeSort(string** arr, int length, int fieldIndex) {
-        if (length <= 1) {
-            return arr;
-        }
-
-        int middlePoint = length / 2;
-        int leftSize = middlePoint, rightSize = length - middlePoint;
-        string** leftArr = getSubArray(arr, 0, middlePoint);
-        string** rightArr = getSubArray(arr, middlePoint, length);
-
-        string** sortedLeft = mergeSort(leftArr, leftSize, fieldIndex);
-        string** sortedRight = mergeSort(rightArr, rightSize, fieldIndex);
-
-        string** sortedArr = new string*[length];
-        int leftIndex = 0, rightIndex = 0;
-
-        for (int i=0; i < length; i++) {
-            if (leftIndex >= leftSize) {
-                sortedArr[i] = sortedRight[rightIndex];
-                rightIndex++;
-                continue;
-            }
-
-            if (rightIndex >= rightSize) {
-                sortedArr[i] = sortedLeft[leftIndex];
-                leftIndex++;
-                continue;
-            }
-
-            if (sortedLeft[leftIndex][fieldIndex] > sortedRight[rightIndex][fieldIndex]) {
-                sortedArr[i] = sortedRight[rightIndex];
-                rightIndex++;
-            } else {
-                sortedArr[i] = sortedLeft[leftIndex];
-                leftIndex++;
-            }
-        }
-
-        // Clean Shallow Copies
-        delete[] sortedLeft;
-        delete[] sortedRight;
-
-        return sortedArr;
-    }
-    */
-    
-    /*
-    int fibMonaccianSearch(string** arr, int n, const string& item, const int fieldIndex)
-    {
-        //Initialize fibonacci numbers
-        int fibMMm2 = 0; // (m-2)'th Fibonacci No.
-        int fibMMm1 = 1; // (m-1)'th Fibonacci No.
-        int fibM = fibMMm2 + fibMMm1; // m'th Fibonacci
-     
-        // fibM is going to store the smallest Fibonacci
-        //   Number greater than or equal to n
-        while (fibM < n) {
-            fibMMm2 = fibMMm1;
-            fibMMm1 = fibM;
-            fibM = fibMMm2 + fibMMm1;
-        }
-     
-        // Marks the eliminated range from front
-        int offset = -1;
-     
-        // while there are elements to be inspected. Note that
-        // we compare arr[fibMm2] with x. When fibM becomes 1,
-        // fibMm2 becomes 0
-        while (fibM > 1) {
-            // Check if fibMm2 is a valid location
-            int i = min(offset + fibMMm2, n - 1);
-     
-            // If x is greater than the value at index fibMm2,
-            //   cut the subarray array from offset to i
-            if (arr[i][fieldIndex] < item) {
-                fibM = fibMMm1;
-                fibMMm1 = fibMMm2;
-                fibMMm2 = fibM - fibMMm1;
-                offset = i;
-            }
-     
-            // If x is greater than the value at index fibMm2,
-            // cut the subarray after i+1
-            else if (arr[i][fieldIndex] > item) {
-                fibM = fibMMm2;
-                fibMMm1 = fibMMm1 - fibMMm2;
-                fibMMm2 = fibM - fibMMm1;
-            }
-     
-            // element found. return index
-            else
-                return i;
-        }
-     
-        // comparing the last element with x
-        if (fibMMm1 && arr[offset + 1][fieldIndex] == item)
-            return offset + 1;
-     
-        // element not found. return -1
-        return -1;
-    }
-    */
-
-
     //Bubble Sort - Jia Yuan
     void bubbleSort(DataContainer2d data, int column) 
     {
@@ -1010,104 +1004,6 @@ public:
             }
         }
     }
-
-    /*
-        Merge function for MergeSort that handles different data types
-    */
-    void merge(string** arr, int left, int mid, int right, int column, bool isDateColumn, bool isNumericColumn, bool isDecimalColumn) {
-        int n1 = mid - left + 1;
-        int n2 = right - mid;
-        
-        // Create temp arrays
-        string** leftArr = new string*[n1];
-        string** rightArr = new string*[n2];
-        
-        // Copy data to temp arrays
-        for (int i = 0; i < n1; i++)
-            leftArr[i] = arr[left + i];
-            
-        for (int j = 0; j < n2; j++)
-            rightArr[j] = arr[mid + 1 + j];
-        
-        // Merge the temp arrays back into arr[left..right]
-        int i = 0; // Initial index of first subarray
-        int j = 0; // Initial index of second subarray
-        int k = left; // Initial index of merged subarray
-        
-        while (i < n1 && j < n2) {
-            bool shouldTakeLeft = false;
-            
-            if (isDateColumn) {
-                // Date comparison
-                if (parseDateString(leftArr[i][column]) <= parseDateString(rightArr[j][column])) {
-                    shouldTakeLeft = true;
-                }
-            }
-            else if (isDecimalColumn) {
-                // Decimal comparison
-                if (stod(leftArr[i][column]) <= stod(rightArr[j][column])) {
-                    shouldTakeLeft = true;
-                }
-            } 
-            else if (isNumericColumn) {
-                // Numeric comparison
-                if (stoi(leftArr[i][column]) <= stoi(rightArr[j][column])) {
-                    shouldTakeLeft = true;
-                }
-            }
-            else {
-                // Regular string comparison
-                if (leftArr[i][column] <= rightArr[j][column]) {
-                    shouldTakeLeft = true;
-                }
-            }
-            
-            if (shouldTakeLeft) {
-                arr[k] = leftArr[i];
-                i++;
-            } else {
-                arr[k] = rightArr[j];
-                j++;
-            }
-            k++;
-        }
-        
-        // Copy the remaining elements of leftArr[]
-        while (i < n1) {
-            arr[k] = leftArr[i];
-            i++;
-            k++;
-        }
-        
-        // Copy the remaining elements of rightArr[]
-        while (j < n2) {
-            arr[k] = rightArr[j];
-            j++;
-            k++;
-        }
-        
-        // Free memory
-        delete[] leftArr;
-        delete[] rightArr;
-    }
-
-    /*
-        Recursive MergeSort helper function with numeric and date handling
-    */
-    void mergeSortHelper(string** arr, int left, int right, int column, bool isDateColumn, bool isNumericColumn, bool isDecimalColumn) {
-        if (left < right) {
-            // Find the middle point
-            int mid = left + (right - left) / 2;
-            
-            // Sort first and second halves
-            mergeSortHelper(arr, left, mid, column, isDateColumn, isNumericColumn, isDecimalColumn);
-            mergeSortHelper(arr, mid + 1, right, column, isDateColumn, isNumericColumn, isDecimalColumn);
-            
-            // Merge the sorted halves
-            merge(arr, left, mid, right, column, isDateColumn, isNumericColumn, isDecimalColumn);
-        }
-    }
-
     /*
         MergeSort that handles numeric columns, date column and normal strings
     */
