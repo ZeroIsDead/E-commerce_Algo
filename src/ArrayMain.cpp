@@ -7,7 +7,8 @@ using namespace std;
 void printMenu(){
     cout << "1) Number of Transcation for Days" << endl;
     cout << "2) Purchase made under \"Electronic\" using \"Credit Card\"" << endl;
-    cout << "3) Recurring words" << endl;
+    cout << "3) Recurring sentences for 1 star review" << endl;
+    cout << "4) Recurring words for 1 star review" << endl;
 };
 
 int inputHandl(int lowestNumber, int highestNumber){
@@ -35,7 +36,7 @@ int main() {
     string reviewFilepath = "reviews_cleaned";
 
     printMenu();
-    input = inputHandl(1,3);
+    input = inputHandl(1,4);
 
     if (input == 1){
         

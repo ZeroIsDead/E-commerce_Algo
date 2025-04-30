@@ -143,7 +143,117 @@ class Functions {
             data.error = 0;
             return data;
         }
-
+    
+        /*
+            Function to find repeating items in a linked list at a specific field index.
+            Assumes the input list is ALREADY SORTED by the specified fieldIndex.
+            Returns a LinkedList containing only the repeating items.
+            
+            Parameters:
+            - head: Pointer to the first node of the linked list (already sorted by fieldIndex)
+            - size: Total number of nodes in the linked list
+            - fieldIndex: The index of the field/column to check for repeating items
+            - x: Number of fields/columns in each node's data
+            
+            Returns:
+            - A new LinkedList containing nodes with repeating values
+        */
+       LinkedList repeatingItem(Node* head, int size, int fieldIndex, int x) {
+        LinkedList result;
+        result.x = 2; // Two columns: value and count
+        result.error = 0;
+        
+        // Check for valid input
+        if (!head || fieldIndex < 0 || fieldIndex >= x) {
+            cout << "Error: Invalid linked list or field index" << endl;
+            result.error = 1;
+            return result;
+        }
+        
+        // Count unique values, taking advantage of the sorted list
+        int uniqueCount = 0;
+        Node* current = head;
+        
+        if (current) {
+            uniqueCount = 1; // At least one unique value if there's data
+            string prevValue = current->data[fieldIndex];
+            current = current->next;
+            
+            // Count the rest of the unique values
+            while (current) {
+                if (current->data[fieldIndex] != prevValue) {
+                    uniqueCount++;
+                    prevValue = current->data[fieldIndex];
+                }
+                current = current->next;
+            }
+        }
+        
+        // Create arrays for unique values and their counts
+        string* uniqueValues = new string[uniqueCount];
+        int* counts = new int[uniqueCount];
+        
+        // Second pass to populate the arrays (taking advantage of sorted list)
+        current = head;
+        if (current) {
+            int uniqueIndex = 0;
+            uniqueValues[uniqueIndex] = current->data[fieldIndex];
+            counts[uniqueIndex] = 1;
+            
+            current = current->next;
+            while (current) {
+                if (current->data[fieldIndex] == uniqueValues[uniqueIndex]) {
+                    counts[uniqueIndex]++;
+                } else {
+                    uniqueIndex++;
+                    uniqueValues[uniqueIndex] = current->data[fieldIndex];
+                    counts[uniqueIndex] = 1;
+                }
+                current = current->next;
+            }
+        }
+        
+        // Create result linked list
+        Node* resultHead = nullptr;
+        Node* resultTail = nullptr;
+        int resultSize = uniqueCount;
+        
+        // Populate the result with unique values and their counts
+        for (int i = 0; i < uniqueCount; i++) {
+            Node* newNode = new Node();
+            newNode->data = new string[2]; // Two columns: value and count
+            newNode->data[0] = uniqueValues[i];  // The unique value
+            newNode->data[1] = to_string(counts[i]); // Count of occurrences
+            newNode->next = nullptr;
+            
+            if (!resultHead) {
+                resultHead = newNode;
+                resultTail = newNode;
+            } else {
+                resultTail->next = newNode;
+                resultTail = newNode;
+            }
+        }
+        
+        // Set up result LinkedList
+        result.head = resultHead;
+        result.tail = resultTail;
+        result.y = resultSize;
+        
+        // Set field headers for result list
+        result.fieldHead = new string[2];
+        if (head) {
+            result.fieldHead[0] = "Value";
+        }
+        result.fieldHead[1] = "Count";
+        
+        // Clean up temporary arrays
+        delete[] uniqueValues;
+        delete[] counts;
+        
+        return result;
+    }
+        
         //  Displays the data in from struct as a table
         void displayTabulatedData(const LinkedList& data) {
             if (data.error == 1 || !data.fieldHead || !data.head) {
