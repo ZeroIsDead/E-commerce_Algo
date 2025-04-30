@@ -156,8 +156,7 @@ private:
 
     //  Array partition function for QuickSort
     int partition(string** data, int low, int high, int column, bool isDateColumn, bool isNumericColumn, bool isDecimalColumn) {
-        // Choose the rightmost element as pivot
-        string pivot = data[high][column];
+        
         int i = low - 1;  // Index of smaller element
         
         for (int j = low; j < high; j++) {
@@ -165,27 +164,19 @@ private:
             
             if (isDateColumn) {
                 // Date comparison
-                if (parseDateString(data[j][column]) <= parseDateString(pivot)) {
-                    shouldSwap = true;
-                }
+                shouldSwap = parseDateString(data[j][column]) <= parseDateString(data[high][column]);
+            }
+            else if (isDecimalColumn) {
+                // Decimal comparision
+                shouldSwap = stod(data[j][column]) < stod(data[high][column]);
             } 
             else if (isNumericColumn) {
                 // Numeric comparison
-                if (stoi(data[j][column]) <  stoi(pivot)) {
-                    shouldSwap = true;
-                }
-            }
-            else if (isDecimalColumn) {
-
-                if (stod(data[j][column]) < stod(pivot)){
-                    shouldSwap = true;
-                }
+                shouldSwap = stoi(data[j][column]) <  stoi(data[high][column]);
             }
             else {
                 // Regular string comparison
-                if (data[j][column] <= pivot) {
-                    shouldSwap = true;
-                }
+                shouldSwap = data[j][column] <= data[high][column];
             }
             
             if (shouldSwap) {
@@ -243,27 +234,19 @@ private:
             
             if (isDateColumn) {
                 // Date comparison
-                if (parseDateString(leftArr[i][column]) <= parseDateString(rightArr[j][column])) {
-                    shouldTakeLeft = true;
-                }
+                shouldTakeLeft = parseDateString(leftArr[i][column]) <= parseDateString(rightArr[j][column]);
             }
             else if (isDecimalColumn) {
-                // Decimal comparison
-                if (stod(leftArr[i][column]) <= stod(rightArr[j][column])) {
-                    shouldTakeLeft = true;
-                }
+                shouldTakeLeft = stod(leftArr[i][column]) <= stod(rightArr[j][column]);
+            
             } 
             else if (isNumericColumn) {
                 // Numeric comparison
-                if (stoi(leftArr[i][column]) <= stoi(rightArr[j][column])) {
-                    shouldTakeLeft = true;
-                }
+                shouldTakeLeft = stoi(leftArr[i][column]) <= stoi(rightArr[j][column]);
             }
             else {
                 // Regular string comparison
-                if (leftArr[i][column] <= rightArr[j][column]) {
-                    shouldTakeLeft = true;
-                }
+                shouldTakeLeft = leftArr[i][column] <= rightArr[j][column];
             }
             
             if (shouldTakeLeft) {
@@ -299,7 +282,7 @@ private:
     void mergeSortHelper(string** arr, int left, int right, int column, bool isDateColumn, bool isNumericColumn, bool isDecimalColumn) {
         if (left < right) {
             // Find the middle point
-            int mid = left + (right - left) / 2;
+            int mid = (left + right)  / 2;
             
             // Sort first and second halves
             mergeSortHelper(arr, left, mid, column, isDateColumn, isNumericColumn, isDecimalColumn);
@@ -632,25 +615,16 @@ public:
                 bool shouldSwap = false;
                 
                 if (isDateColumn) {
-                    if (parseDateString(data.data[j][column]) > parseDateString(data.data[j + 1][column])) {
-                        shouldSwap = true;
-                    }
+                    shouldSwap = parseDateString(data.data[j][column]) > parseDateString(data.data[j + 1][column]);
                 }
                 else if(isColumnDecimal){
-                    if (stod(data.data[j][column]) > stod(data.data[j + 1][column])){
-                        shouldSwap = true;
-                    }
+                    shouldSwap = stod(data.data[j][column]) > stod(data.data[j + 1][column]);
                 }
                 else if (isColumnNumeric){
-                    if (stoi(data.data[j][column]) > stoi(data.data[j + 1][column])){
-                        shouldSwap = true;
-                    }
+                    shouldSwap = stoi(data.data[j][column]) > stoi(data.data[j + 1][column]);
                 }
-                
                 else {
-                    if (data.data[j][column] > data.data[j + 1][column]) {
-                        shouldSwap = true;
-                    }
+                    shouldSwap = data.data[j][column] > data.data[j + 1][column];
                 }
             
                 if (shouldSwap) {
@@ -713,24 +687,16 @@ public:
                 
                 if (isDateColumn) {
                     // Date comparison
-                    if (parseDateString(data.data[j][column]) < parseDateString(data.data[min_idx][column])) {
-                        shouldUpdate = true;
-                    }
+                    shouldUpdate = parseDateString(data.data[j][column]) < parseDateString(data.data[min_idx][column]);
                 } else if (isColumnDecimal) {
                     // Decimal comparison
-                    if (stod(data.data[j][column]) < stod(data.data[min_idx][column])) {
-                        shouldUpdate = true;
-                    }
+                    shouldUpdate = stod(data.data[j][column]) < stod(data.data[min_idx][column]);
                 } else if (isColumnNumeric) {
                     // Integer comparison
-                    if (stoi(data.data[j][column]) < stoi(data.data[min_idx][column]) ) {
-                        shouldUpdate = true;
-                    }
+                    shouldUpdate = stoi(data.data[j][column]) < stoi(data.data[min_idx][column]);
                 } else {
                     // Regular string comparison
-                    if (data.data[j][column] < data.data[min_idx][column]) {
-                        shouldUpdate = true;
-                    }
+                    shouldUpdate = data.data[j][column] < data.data[min_idx][column];
                 }
                 
                 if (shouldUpdate) {
@@ -752,8 +718,7 @@ public:
         returns first and last index as reference
         Data needs to be sorted as per column
     */
-    void interpolationSearchRange(string** data, int size, int column, const string& target, int& first, int& last) 
-    {
+    void interpolationSearchRange(string** data, int size, int column, const string& target, int& first, int& last) {
         first = -1;
         last = -1;
         
@@ -763,8 +728,7 @@ public:
         int high = size - 1;
     
         // Find FIRST occurrence
-        while (low <= high && target >= data[low][column] && target <= data[high][column]) 
-        {
+        while (low <= high && target >= data[low][column] && target <= data[high][column]) {
             if (low == high) {
                 if (data[low][column] == target) {
                     first = low;
@@ -772,9 +736,28 @@ public:
                 break;
             }
             
-            int targetChar = target.empty() ? 0 : target[0];
-            int lowChar = data[low][column].empty() ? 0 : data[low][column][0];
-            int highChar = data[high][column].empty() ? 0 : data[high][column][0];
+            int targetChar;
+            int lowChar;
+            int highChar;
+
+            if (target.size() == 0) {
+                targetChar = 0;
+            } else {
+                targetChar = target[0];
+            }
+            
+            if (data[low][column].size() == 0) {
+                lowChar = 0;
+            } else {
+                lowChar = data[low][column][0];
+            }
+        
+            if (data[high][column].size() == 0) {
+                highChar = 0;
+            } else {
+                highChar = data[high][column][0];
+            }
+            
     
             if (highChar == lowChar) {
                 for (int i = low; i <= high; i++) {
@@ -792,7 +775,7 @@ public:
     
             if (data[pos][column] == target) {
                 first = pos;
-                high = pos - 1; // Move left to find earlier match
+                high = pos - 1; 
             }
             else if (data[pos][column] < target) {
                 low = pos + 1;
@@ -815,9 +798,27 @@ public:
                 break;
             }
             
-            int targetChar = target.empty() ? 0 : target[0];
-            int lowChar = data[low][column].empty() ? 0 : data[low][column][0];
-            int highChar = data[high][column].empty() ? 0 : data[high][column][0];
+            int targetChar;
+            int lowChar;
+            int highChar;
+            
+            if (target.length() == 0) {
+                targetChar = 0;
+            } else {
+                targetChar = target[0];
+            }
+
+            if (data[low][column].length() == 0) {
+                lowChar = 0;
+            } else {
+                lowChar = data[low][column][0];
+            }
+
+            if (data[high][column].length() == 0) {
+                highChar = 0;
+            } else {
+                highChar = data[high][column][0];
+            }
     
             if (highChar == lowChar) {
                 for (int i = high; i >= low; i--) {
@@ -835,7 +836,7 @@ public:
     
             if (data[pos][column] == target) {
                 last = pos;
-                low = pos + 1; // Move right to find later match
+                low = pos + 1;
             }
             else if (data[pos][column] < target) {
                 low = pos + 1;
@@ -878,17 +879,9 @@ public:
         int low = 0;
         int high = size - 1;
 
-        bool isDateColumn = false;
-        bool isColumnNumeric = false;
-        bool isColumnDecimal = false;
-        
-        string val = data[0][column];
-        if (val.length() >= 10 && val[2] == '/' && val[5] == '/') {
-            isDateColumn = true;
-        } else {
-            isColumnNumeric = isNumeric(data[0][column]);
-            isColumnDecimal = isDecimal(data[0][column]);
-        }
+        bool isDateColumn = data[0][column].length() >= 10 && data[0][column][2] == '/' && data[0][column][5] == '/';
+        bool isColumnDecimal = !isDateColumn && isDecimal(data[0][column]);;
+        bool isColumnNumeric = !isDateColumn && !isColumnDecimal && isNumeric(data[0][column]);
 
         first = -1;
         last = -1;
@@ -992,20 +985,9 @@ public:
         if (size <= 0) return;
         
         // Detect column types
-        bool isDateColumn = false;
-        bool isColumnNumeric = false;
-        bool isColumnDecimal = false;
-        
-        // Check for date format
-        string val = data[0][column];
-        if (val.length() >= 10 && val[2] == '/' && val[5] == '/') {
-            isDateColumn = true;
-        } 
-        else {
-            // If not a date column, check if it's numeric or decimal
-            isColumnNumeric = isNumeric(data[0][column]);
-            isColumnDecimal = isDecimal(data[0][column]);
-        }
+        bool isDateColumn = data[0][column].length() >= 10 && data[0][column][2] == '/' && data[0][column][5] == '/';
+        bool isColumnDecimal = !isDateColumn && isDecimal(data[0][column]);;
+        bool isColumnNumeric = !isDateColumn && !isColumnDecimal && isNumeric(data[0][column]);
         
         // Find FIRST occurrence using Fibonacci search
         int fibMMm2 = 0;  // (m-2)'th Fibonacci Number
@@ -1074,7 +1056,8 @@ public:
                     
                     if (prevEqual) {
                         first--;
-                    } else {
+                    } 
+                    else {
                         break;
                     }
                 }
