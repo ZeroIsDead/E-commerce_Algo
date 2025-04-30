@@ -35,7 +35,7 @@ class Timer {
 class Functions {
 private:
     /*
-        Function to Count the number of colums in one single line, (in CSV file).
+        Function to Count the number of colums in one string reference.
         Returns the number of columns as integer
     */
     int countColumns(const string& line) {
@@ -154,9 +154,7 @@ private:
         }
     }
 
-     /*
-        Array partition function for QuickSort
-    */
+    //  Array partition function for QuickSort
     int partition(string** data, int low, int high, int column, bool isDateColumn, bool isNumericColumn, bool isDecimalColumn) {
         // Choose the rightmost element as pivot
         string pivot = data[high][column];
@@ -207,9 +205,7 @@ private:
         return i + 1;
     }
 
-    /*
-        Recursive QuickSort helper function with numeric and date handling
-    */
+    //  Recursive QuickSort helper function with numeric, decimal and date handling
     void quickSortHelper(string** data, int low, int high, int column, bool isDateColumn, bool isNumericColumn, bool isDecimalColumn) {
         if (low < high) {
             // pi is the partitioning index, data[pi] is now at right place
@@ -221,10 +217,7 @@ private:
         }
     }
 
-    
-    /*
-        Merge function for MergeSort that handles different data types
-    */
+    //  Merge function for MergeSort with numeric, decimal and date handling
     void merge(string** arr, int left, int mid, int right, int column, bool isDateColumn, bool isNumericColumn, bool isDecimalColumn) {
         int n1 = mid - left + 1;
         int n2 = right - mid;
@@ -302,9 +295,7 @@ private:
         delete[] rightArr;
     }
 
-    /*
-        Recursive MergeSort helper function with numeric and date handling
-    */
+    //  Recursive MergeSort helper function with numeric, decimal and date handling
     void mergeSortHelper(string** arr, int left, int right, int column, bool isDateColumn, bool isNumericColumn, bool isDecimalColumn) {
         if (left < right) {
             // Find the middle point
@@ -385,7 +376,9 @@ public:
     }
 
     /*
-        Displays the data from struct as a table
+        Table creation function
+        Takes a DataContainer2d as an argument
+        prints data in a table with fieldnames
     */
     void displayTabulatedData(const DataContainer2d& container) {
         if (container.error == 1 || container.fields == nullptr || container.data == nullptr) {
@@ -480,7 +473,6 @@ public:
         return sum;
     }
 
-
     /*
         Helper function to reverse the array 
     */
@@ -492,37 +484,207 @@ public:
         }
     }
 
+    /*
+        Performs interpolation search on a sorted string array
+        Returns the index of the target string if found, otherwise -1
+        
+        For string interpolation, we use a simple heuristic based on first character ASCII value
+        This is a simplified approach since true string interpolation is more complex
+    */
+    DataContainer2d subDataContainer2d(DataContainer2d data, int first, int last){
+            
+        if (data.error == 1 || first > last){
+            cout << "Error: Invalid data container or column index" << endl;
+            DataContainer2d errorContainer;
+            errorContainer.error = 1;
+            return errorContainer;;
+        }
+
+        DataContainer2d result;
+        result.error = 0;
+        result.y = (last - first) + 1;
+        result.x = data.x;
+        result.fields = data.fields;
+
+        result.data = new string*[result.y];
+
+        for (int i = 0; i < result.y; i++) {
+            result.data[i] = new string[result.x];
+            for (int j = 0; j < result.x; j++) {
+                result.data[i][j] = data.data[first + i][j];
+            }
+        }
+
+        return result;
+
+    }    
+    
+    /*
+        Finds unique values in the specified column and counts their occurrences
+        Assumes data is already sorted by the specified column
+        Returns a DataContainer2d with two columns: the unique values and their counts
+    */
+    DataContainer2d repeatingItem(DataContainer2d& data, int column) {
+        // Check for valid input
+        if (data.error == 1 || column < 0 || column >= data.x) {
+            cout << "Error: Invalid data container or column index" << endl;
+            DataContainer2d errorContainer;
+            errorContainer.error = 1;
+            return errorContainer;
+        }
+        
+        // First pass to count unique values
+        int uniqueCount = 0;
+        if (data.y > 0) {
+            uniqueCount = 1; // At least one unique value if there's data
+            
+            for (int i = 1; i < data.y; i++) {
+                if (data.data[i][column] != data.data[i-1][column]) {
+                    uniqueCount++;
+                }
+            }
+        }
+        
+        // Create arrays for unique values and their counts
+        string* uniqueValues = new string[uniqueCount];
+        int* counts = new int[uniqueCount];
+        
+        // Second pass to populate the arrays
+        if (data.y > 0) {
+            int uniqueIndex = 0;
+            uniqueValues[uniqueIndex] = data.data[0][column];
+            counts[uniqueIndex] = 1;
+            
+            for (int i = 1; i < data.y; i++) {
+                if (data.data[i][column] == uniqueValues[uniqueIndex]) {
+                    counts[uniqueIndex]++;
+                } else {
+                    uniqueIndex++;
+                    uniqueValues[uniqueIndex] = data.data[i][column];
+                    counts[uniqueIndex] = 1;
+                }
+            }
+        }
+        
+        // Create result container
+        DataContainer2d result;
+        result.error = 0;
+        result.x = 2; // Two columns: value and count
+        result.y = uniqueCount; // Number of unique values
+        
+        // Set up field names
+        result.fields = new string[2];
+        result.fields[0] = data.fields[column]; 
+        result.fields[1] = "Count";
+        
+        // Allocate memory for data and populate it
+        result.data = new string*[result.y];
+        for (int i = 0; i < result.y; i++) {
+            result.data[i] = new string[2];
+            result.data[i][0] = uniqueValues[i];
+            result.data[i][1] = to_string(counts[i]);
+        }
+        
+        // Clean up temporary arrays
+        delete[] uniqueValues;
+        delete[] counts;
+        
+        return result;
+    }
+
+    /*
+        Merge Sort that handles numeric columns, date column and normal strings
+    */
+    void mergeSort(DataContainer2d data, int column) {
+        if (data.error != 0) {
+            cout << "Data entered is empty or invalid!" << endl;
+            return;
+        }
+        
+        // Detect column types
+        bool isDateColumn = data.data[0][column].length() >= 10 && data.data[0][column][2] == '/' && data.data[0][column][5] == '/';
+        bool isColumnDecimal = !isDateColumn && isDecimal(data.data[0][column]);;
+        bool isColumnNumeric = !isDateColumn && !isColumnDecimal && isNumeric(data.data[0][column]);
+        
+        // Sort the data using MergeSort
+        mergeSortHelper(data.data, 0, data.y - 1, column, isDateColumn, isColumnNumeric, isColumnDecimal);
+    }
+
+    /*
+        Bubble Sort that handles numeric columns, date column and normal strings
+    */
+    void bubbleSort(DataContainer2d data, int column) {
+        
+        if (data.error != 0) {
+            cout << "Data entered is empty or invalid!" << endl;
+            return;
+        }
+
+        // Detecting column types
+        bool isDateColumn = data.data[0][column].length() >= 10 && data.data[0][column][2] == '/' && data.data[0][column][5] == '/';
+        bool isColumnDecimal = !isDateColumn && isDecimal(data.data[0][column]);;
+        bool isColumnNumeric = !isDateColumn && !isColumnDecimal && isNumeric(data.data[0][column]);
+        
+        for (int i = 0; i < data.y; i++) {
+            bool swap = false;
+
+            for (int j = 0; j < data.y - i - 1; j++) {
+                bool shouldSwap = false;
+                
+                if (isDateColumn) {
+                    if (parseDateString(data.data[j][column]) > parseDateString(data.data[j + 1][column])) {
+                        shouldSwap = true;
+                    }
+                }
+                else if(isColumnDecimal){
+                    if (stod(data.data[j][column]) > stod(data.data[j + 1][column])){
+                        shouldSwap = true;
+                    }
+                }
+                else if (isColumnNumeric){
+                    if (stoi(data.data[j][column]) > stoi(data.data[j + 1][column])){
+                        shouldSwap = true;
+                    }
+                }
+                
+                else {
+                    if (data.data[j][column] > data.data[j + 1][column]) {
+                        shouldSwap = true;
+                    }
+                }
+            
+                if (shouldSwap) {
+                    string* temp = data.data[j];
+                    data.data[j] = data.data[j+1];
+                    data.data[j+1] = temp;
+                    swap = true;
+                }
+            }
+
+            if(!swap) {
+                break;
+            }
+        }
+    }
 
     /*
          QuickSort that handles numeric columns, date column and normal strings
     */
     void quickSort(DataContainer2d data, int column) {
         
-        if (data.error != 0){
-            cout << "Data entered is empty of invalid! " << endl;
+        if (data.error != 0) {
+            cout << "Data entered is empty or invalid!" << endl;
+            return;
         }
-        else{
 
-            // Detect column types
-            bool isDateColumn = false;
-            bool isColumnNumeric = false;
-            bool isColumnDecimal = false;
-            
-            // Check for date format
-            string val = data.data[0][column];
-            if (val.length() >= 10 && val[2] == '/' && val[5] == '/') {
-                isDateColumn = true;
-            } 
-            else{
-                // If not a date column, check if it's numeric
-                isColumnNumeric = isNumeric(data.data[0][column]);
-                isColumnDecimal = isDecimal(data.data[0][column]);
-            }
-            
-            // Sort the data using QuickSort
-            quickSortHelper(data.data, 0, data.y - 1, column, isDateColumn, isColumnNumeric, isColumnDecimal);
-            
-        }
+        /// Detecting column types
+        bool isDateColumn = data.data[0][column].length() >= 10 && data.data[0][column][2] == '/' && data.data[0][column][5] == '/';
+        bool isColumnDecimal = !isDateColumn && isDecimal(data.data[0][column]);;
+        bool isColumnNumeric = !isDateColumn && !isColumnDecimal && isNumeric(data.data[0][column]);
+        
+        // Sort the data using QuickSort
+        quickSortHelper(data.data, 0, data.y - 1, column, isDateColumn, isColumnNumeric, isColumnDecimal);
+        
         
     }
    
@@ -530,26 +692,16 @@ public:
         Selection Sort that handles numeric columns (integers and decimals), date column and normal strings
     */
    void selectionSort(DataContainer2d data, int column) {
+        
         if (data.error != 0) {
             cout << "Data entered is empty or invalid!" << endl;
             return;
         }
         
-        // Detect column types
-        bool isDateColumn = false;
-        bool isColumnNumeric = false;
-        bool isColumnDecimal = false;
-        
-        // Check for date format
-        string val = data.data[0][column];
-        if (val.length() >= 10 && val[2] == '/' && val[5] == '/') {
-            isDateColumn = true;
-        } 
-        else {
-            // If not a date column, check if it's numeric or decimal
-            isColumnNumeric = isNumeric(data.data[0][column]);
-            isColumnDecimal = isDecimal(data.data[0][column]);
-        }
+        // Detecting column types
+        bool isDateColumn = data.data[0][column].length() >= 10 && data.data[0][column][2] == '/' && data.data[0][column][5] == '/';
+        bool isColumnDecimal = !isDateColumn && isDecimal(data.data[0][column]);;
+        bool isColumnNumeric = !isDateColumn && !isColumnDecimal && isNumeric(data.data[0][column]);
         
         // Selection Sort algorithm
         for (int i = 0; i < data.y - 1; i++) {
@@ -596,40 +748,10 @@ public:
     }
    
     /*
-        Performs interpolation search on a sorted string array
-        Returns the index of the target string if found, otherwise -1
-        
-        For string interpolation, we use a simple heuristic based on first character ASCII value
-        This is a simplified approach since true string interpolation is more complex
+        Performs interpolation search on a string array
+        returns first and last index as reference
+        Data needs to be sorted as per column
     */
-    DataContainer2d subDataContainer2d(DataContainer2d data, int first, int last){
-        
-        if (data.error == 1 || first > last){
-            cout << "Error: Invalid data container or column index" << endl;
-            DataContainer2d errorContainer;
-            errorContainer.error = 1;
-            return errorContainer;;
-        }
-
-        DataContainer2d result;
-        result.error = 0;
-        result.y = (last - first) + 1;
-        result.x = data.x;
-        result.fields = data.fields;
-
-        result.data = new string*[result.y];
-
-        for (int i = 0; i < result.y; i++) {
-            result.data[i] = new string[result.x];
-            for (int j = 0; j < result.x; j++) {
-                result.data[i][j] = data.data[first + i][j];
-            }
-        }
-
-        return result;
-
-    }    
-    
     void interpolationSearchRange(string** data, int size, int column, const string& target, int& first, int& last) 
     {
         first = -1;
@@ -723,86 +845,11 @@ public:
             }
         }
     }
-
-    /*
-        Finds unique values in the specified column and counts their occurrences
-        Assumes data is already sorted by the specified column
-        Returns a DataContainer2d with two columns: the unique values and their counts
-    */
-    DataContainer2d repeatingItem(DataContainer2d& data, int column) {
-        // Check for valid input
-        if (data.error == 1 || column < 0 || column >= data.x) {
-            cout << "Error: Invalid data container or column index" << endl;
-            DataContainer2d errorContainer;
-            errorContainer.error = 1;
-            return errorContainer;
-        }
-        
-        // First pass to count unique values
-        int uniqueCount = 0;
-        if (data.y > 0) {
-            uniqueCount = 1; // At least one unique value if there's data
-            
-            for (int i = 1; i < data.y; i++) {
-                if (data.data[i][column] != data.data[i-1][column]) {
-                    uniqueCount++;
-                }
-            }
-        }
-        
-        // Create arrays for unique values and their counts
-        string* uniqueValues = new string[uniqueCount];
-        int* counts = new int[uniqueCount];
-        
-        // Second pass to populate the arrays
-        if (data.y > 0) {
-            int uniqueIndex = 0;
-            uniqueValues[uniqueIndex] = data.data[0][column];
-            counts[uniqueIndex] = 1;
-            
-            for (int i = 1; i < data.y; i++) {
-                if (data.data[i][column] == uniqueValues[uniqueIndex]) {
-                    counts[uniqueIndex]++;
-                } else {
-                    uniqueIndex++;
-                    uniqueValues[uniqueIndex] = data.data[i][column];
-                    counts[uniqueIndex] = 1;
-                }
-            }
-        }
-        
-        // Create result container
-        DataContainer2d result;
-        result.error = 0;
-        result.x = 2; // Two columns: value and count
-        result.y = uniqueCount; // Number of unique values
-        
-        // Set up field names
-        result.fields = new string[2];
-        result.fields[0] = data.fields[column]; 
-        result.fields[1] = "Count";
-        
-        // Allocate memory for data and populate it
-        result.data = new string*[result.y];
-        for (int i = 0; i < result.y; i++) {
-            result.data[i] = new string[2];
-            result.data[i][0] = uniqueValues[i];
-            result.data[i][1] = to_string(counts[i]);
-        }
-        
-        // Clean up temporary arrays
-        delete[] uniqueValues;
-        delete[] counts;
-        
-        return result;
-    }
-    
-    
+      
     /*
         Performs linear search on a string array
-        Returns the index of the target string if found, otherwise -1
-        
-        This is a simple sequential search that works on both sorted and unsorted data
+        returns first and last index as reference
+        Data needs to be sorted as per column
     */
     void linearSearchRange(string** data, int size, int column, const string& target, int& first, int& last) 
     {
@@ -821,91 +868,11 @@ public:
         }
     }
 
-    string** getSubArray(string** arr,int start, int end) {
-        int length = end - start;
-
-        string** subArray = new string*[length];
-
-        for (int i = 0; i < length; i++) {
-            subArray[i] = arr[start + i];
-        }
-
-        return subArray;
-    }
-
-    //Bubble Sort - Jia Yuan
-    void bubbleSort(DataContainer2d data, int column) 
-    {
-        // Detect column types
-        bool isDateColumn = false;
-        bool isColumnNumeric = false;
-        bool isColumnDecimal = false;
-
-        // Check for date format
-        string val = data.data[0][column];
-        if (val.length() >= 10 && val[2] == '/' && val[5] == '/') {
-            isDateColumn = true;
-        } 
-        else{
-            // If not a date column, check if it's numeric
-            isColumnNumeric = isNumeric(data.data[0][column]);
-            isColumnDecimal = isDecimal(data.data[0][column]);
-            }
-
-        for (int i = 0; i < data.y; i++) 
-        {
-            bool swap = false;
-
-            for (int j = 0; j < data.y - i - 1; j++) 
-            {
-                bool shouldSwap = false;
-                
-                if (isDateColumn) 
-                {
-                    if (parseDateString(data.data[j][column]) > parseDateString(data.data[j + 1][column])) 
-                    {
-                        shouldSwap = true;
-                    }
-                }
-                else if(isColumnDecimal)
-                {
-                    if (stod(data.data[j][column]) > stod(data.data[j + 1][column]))
-                    {
-                        shouldSwap = true;
-                    }
-                }
-                else if (isColumnNumeric)
-                {
-                    if (stoi(data.data[j][column]) > stoi(data.data[j + 1][column]))
-                    {
-                        shouldSwap = true;
-                    }
-                }
-                
-                else 
-                {
-                    if (data.data[j][column] > data.data[j + 1][column]) 
-                    {
-                        shouldSwap = true;
-                    }
-                }
-            
-                if (shouldSwap) 
-                {
-                    string* temp = data.data[j];
-                    data.data[j] = data.data[j+1];
-                    data.data[j+1] = temp;
-                    swap = true;
-                }
-            }
-
-            if(!swap) 
-            {
-                break;
-            }
-        }
-    }
-
+    /*
+        Performs binary search on a string array
+        returns first and last index as reference
+        Data needs to be sorted as per column
+    */
     void binarySearchRange(string** data, int size, int column, const string& target, int& first, int& last) 
     {
         int low = 0;
@@ -1012,38 +979,11 @@ public:
             }
         }
     }
+    
     /*
-        MergeSort that handles numeric columns, date column and normal strings
-    */
-    void mergeSort(DataContainer2d data, int column) {
-        if (data.error != 0) {
-            cout << "Data entered is empty or invalid!" << endl;
-            return;
-        }
-        
-        // Detect column types
-        bool isDateColumn = false;
-        bool isColumnNumeric = false;
-        bool isColumnDecimal = false;
-        
-        // Check for date format
-        string val = data.data[0][column];
-        if (val.length() >= 10 && val[2] == '/' && val[5] == '/') {
-            isDateColumn = true;
-        } 
-        else {
-            // If not a date column, check if it's numeric or decimal
-            isColumnDecimal = isDecimal(data.data[0][column]);
-            isColumnNumeric = isNumeric(data.data[0][column]);
-        }
-        
-        // Sort the data using MergeSort
-        mergeSortHelper(data.data, 0, data.y - 1, column, isDateColumn, isColumnNumeric, isColumnDecimal);
-    }
-
-    /*
-        Fibonacci search that handles numeric columns, date column and normal strings
-        Returns two indices: first and last occurrence of the target value
+        Performs fibonacci search on a string array
+        returns first and last index as reference
+        Data needs to be sorted as per column
     */
     void fibonacciSearchRange(string** data, int size, int column, const string& target, int& first, int& last) {
         first = -1;
