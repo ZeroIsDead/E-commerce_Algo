@@ -261,7 +261,8 @@ class Functions {
             return current;
         }
 
-        /*  Fibmonaccian Search Range, 
+        /*  
+            Fibmonaccian Search Range, 
             returns the reference of fist and last index from a sorted linked list 
         */
         void fibMonaccianSearchRange(Node* head, int size, const string& item, const int fieldIndex, int& first, int& last) {
@@ -328,7 +329,8 @@ class Functions {
                     }
                     
                     right = mid - 1;
-                } else {
+                } 
+                else {
                     left = mid + 1;
                 }
             }
@@ -479,7 +481,6 @@ class Functions {
                         isEqual = stoi(midNode->data[fieldIndex]) == stoi(item);
                     else
                         isEqual = midNode->data[fieldIndex] == item;
-        
                     if (isEqual)
                         last = mid;
         
@@ -1148,8 +1149,6 @@ class Functions {
             Returns true if the string represents a number, false otherwise
         */
         bool isNumeric(const string& str) {
-            if (str.empty()) return false; // FIXED: Check for empty string
-            
             try {
                 stoi(str);
                 return true;

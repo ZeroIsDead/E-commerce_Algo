@@ -174,6 +174,8 @@ int main() {
         double percentage = ((double)transactionData1.y/(double)totalDataSize)*100;
 
         cout << "Percentage of \"Electronics\" and \"Credit Card\": " << percentage << "%" << endl;
+
+        main();
     }
     else{
 
@@ -198,6 +200,9 @@ int main() {
         functions.reverseArray(repeatingReviews.data, repeatingReviews.y);
 
         functions.displayTabulatedData(repeatingReviews);
+        cout << endl;
+
+        main();
     }
 
     

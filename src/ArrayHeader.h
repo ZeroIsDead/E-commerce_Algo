@@ -88,7 +88,6 @@ private:
             }
         }
     }
-
     
     /*
         Helper function to parse date string in format "dd/mm/yyyy" and convert to comparable value
@@ -293,7 +292,35 @@ private:
         }
     }
 
-
+    int countWordsInColumn(DataContainer2d data, int column) {
+        int wordCount = 0;
+    
+        for (int i = 0; i < data.y; ++i) {
+            //string cell = data.data[i][column];
+    
+            // Replace punctuation with space
+            for (int j = 0; j < data.data[i][column].length(); ++j) {
+                if (data.data[i][column][j] == ',' || data.data[i][column][j] == '.' || data.data[i][column][j] == '"') {
+                    data.data[i][column][j] = ' ';
+                }
+            }
+    
+            bool inWord = false;
+            for (int j = 0; j < data.data[i][column].length(); ++j) {
+                if (data.data[i][column][j] != ' ') {
+                    if (!inWord) {
+                        wordCount++;
+                        inWord = true;
+                    }
+                } else {
+                    inWord = false;
+                }
+            }
+        }
+    
+        return wordCount;
+    }
+    
 public:
     
     /*
@@ -1128,4 +1155,62 @@ public:
         }
     }
 
+    /*
+        DataContainer for all words in a coloum
+    */
+    DataContainer2d words(DataContainer2d data, int column) {
+        if (data.error == 1 || column < 0 || column >= data.x) {
+            DataContainer2d err;
+            err.error = 1;
+            return err;
+        }
+    
+        // Number of words
+        int wordCount = countWordsInColumn(data,column);
+
+        // result container 
+        DataContainer2d result;
+        result.error = 0;
+        result.x = 1;
+        result.y = wordCount;
+        result.fields = new string[1];
+        result.fields[0] = "Word";
+        result.data = new string*[wordCount];
+    
+        // Extract words
+        int wordIndex = 0;
+    
+        for (int i = 0; i < data.y; ++i) {
+            
+            // Build words manually
+            string currentWord = "";
+            for (int j = 0; j <= data.data[i][column].length(); ++j) {
+                
+                // Add trailing space to flush last word
+                char c;
+                if (j < data.data[i][column].length()){
+                    c = data.data[i][column][j];
+                }
+                else{
+                    c = ' ';
+                }
+                
+                if (c != ' ') {
+                    currentWord += c;
+                } else {
+                    if (!currentWord.empty()) {
+                        result.data[wordIndex] = new string[1];
+                        result.data[wordIndex][0] = currentWord;
+                        wordIndex++;
+                        currentWord = "";
+                    }
+                }
+            }
+        }
+    
+        return result;
+    
+    }
+    
+    
 };
