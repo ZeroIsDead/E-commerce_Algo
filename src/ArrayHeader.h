@@ -1,6 +1,3 @@
-#ifndef DATACONTAINER_H
-#define DATACONTAINER_H
-
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -131,18 +128,29 @@ private:
         Checks if a string is a decimal number (contains a dot and can be converted to double)
         Returns true if the string represents a decimal number, false otherwise
     */
-   bool isDecimal(const string& str) {
+    bool isDecimal(const string& str) {
         try {
-            // Check if the string contains a decimal point
-            if (str.find('.') != string::npos) {
-                stod(str); // Try converting to verify it's a valid decimal
+            // Manually check if the string contains a decimal point
+            bool hasDecimalPoint = false;
+            for (size_t i = 0; i < str.length(); i++) {
+                if (str[i] == '.') {
+                    hasDecimalPoint = true;
+                    break;
+                }
+            }
+            
+            if (hasDecimalPoint) {
+                stod(str);
                 return true;
             }
+
                 return false;
-            } catch (const std::invalid_argument&) {
-                return false;
-            } catch (const std::out_of_range&) {
-                return false;
+        } 
+        catch (const std::invalid_argument&) {
+            return false;
+        } 
+        catch (const std::out_of_range&) {
+            return false;
         }
     }
 
@@ -1198,5 +1206,3 @@ public:
     }
 
 };
-
-#endif // DATACONTAINER_H
