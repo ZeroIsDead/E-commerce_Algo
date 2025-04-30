@@ -9,7 +9,7 @@ int main() {
     Functions functions;
  
     // Use the specified file path
-    string filepath = "transactions_cleaned.csv";
+    string filepath = "transactions_cleaned";
     
     // Read the CSV file - THIS LINE WAS MISSING
     cout << "Reading file: " << filepath << endl;
@@ -23,23 +23,44 @@ int main() {
          return 0;
     }
     else{
-        // cout << "[DEBUG] data.error = " << data.error << endl;
-        // cout << "[DEBUG] fieldHead is " << (data.fieldHead ? "not null" : "null") << endl;
-        // cout << "[DEBUG] head is " << (data.head ? "not null" : "null") << endl;
-
-        // Display the data
-
         Timer timer = Timer();
-        cout << "\n==== CSV File Contents ====\n" << endl;
-
+        
         timer.start();
-        data.head = functions.mergeSort(data.head, data.y, 2);
+        data.head = functions.mergeSort(data.head, data.y, 4);
         data.tail = functions.getNodeTail(data.head);
+        cout << "Merge Sort ";
+        timer.end();
+        
+        //functions.displayTabulatedData(data);
+        
+        int first, last;
+
+        timer.start();
+        functions.fibMonaccianSearchRange(data.head, data.y, "01/01/2024", 4, first, last);
+        cout << "Binary Search \"01/01/2024\" ";
+        timer.end();
+
+        data.head = functions.subLinkedList(data.head, first, last, data.x);
+        data.tail = functions.getNodeTail(data.head);
+        data.y = last-first + 1;
+
+        timer.start();
+        data.head = functions.quickSort(data.head, data.y,1);
+        data.tail = functions.getNodeTail(data.head);
+        cout << "Quick sort";
         timer.end();
 
         timer.start();
-        cout << functions.fibMonaccianSearch(data.head, data.y, "Electronics", 2) << " Index" << endl;
+        functions.fibMonaccianSearchRange(data.head, data.y, "Gaming Console", 1, first, last);
+        cout << "Binary Search \"Gaming Console\"";
         timer.end();
+
+
+        data.head = functions.subLinkedList(data.head, first,last, data.x);
+        data.tail = functions.getNodeTail(data.head);
+        data.y = last-first + 1;
+
+        functions.displayTabulatedData(data);
 
         // functions.displayTabulatedData(data);
         
