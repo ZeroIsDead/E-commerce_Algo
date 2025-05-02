@@ -178,7 +178,7 @@ int main() {
 
         main();
     }
-    else{
+    else if (input == 3){
 
         int first, last;
 
@@ -187,22 +187,146 @@ int main() {
         DataContainer2d reviewData3 = functions.getdata(reviewFilepath);
         DataContainer2d reviewData4 = functions.getdata(reviewFilepath);
 
-        functions.quickSort(reviewData1, 2);
-        functions.binarySearchRange(reviewData1.data, reviewData1.y, 2, "1", first, last);
-        
-        reviewData1 = functions.subDataContainer2d(reviewData1,first,last);
+        timer.start();
+        functions.bubbleSort(reviewData1, 2);
+        cout << "Bubble Sort for review ";
+        timer.end();
 
+        timer.start();
+        functions.binarySearchRange(reviewData1.data, reviewData1.y, 2, "1", first, last);
+        cout<< "Binary Search for all 1 star review ";
+        timer.end();
+
+        timer.start();
+        functions.selectionSort(reviewData1, 2);
+        cout << "Selection Sort for review ";
+        timer.end();
+
+        timer.start();
+        functions.linearSearchRange(reviewData1.data, reviewData1.y, 2, "1", first, last);
+        cout<< "Linear Search for all 1 star review ";
+        timer.end();
+
+        timer.start();
+        functions.mergeSort(reviewData1, 2);
+        cout << "Merge Sort for review ";
+        timer.end();
+
+        timer.start();
+        functions.fibonacciSearchRange(reviewData1.data, reviewData1.y, 2, "1", first, last);
+        cout<< "Finbonacci Search for all 1 star review ";
+        timer.end();
+
+        timer.start();
+        functions.quickSort(reviewData1, 2);
+        cout << "Quick Sort for review ";
+        timer.end();
+
+        timer.start();
+        functions.interpolationSearchRange(reviewData1.data, reviewData1.y, 2, "1", first, last);
+        cout<< "Interpolation Search for all 1 star review ";
+        timer.end();
+
+        reviewData1 = functions.subDataContainer2d(reviewData1,first,last);
         functions.quickSort(reviewData1, 3);
 
-        DataContainer2d repeatingReviews = functions.repeatingItem(reviewData1, 3);
+        reviewData1 = functions.repeatingItem(reviewData1, 3);
 
-        functions.quickSort(repeatingReviews, 1);
+        functions.quickSort(reviewData1, 1);
 
-        functions.reverseArray(repeatingReviews.data, repeatingReviews.y);
+        functions.reverseArray(reviewData1.data, reviewData1.y);
 
-        functions.displayTabulatedData(repeatingReviews);
+        functions.displayTabulatedData(reviewData1);
         cout << endl;
 
+        main();
+    }
+    else{
+
+        DataContainer2d reviewData1 = functions.getdata(reviewFilepath);
+        DataContainer2d reviewData2 = functions.getdata(reviewFilepath);
+        DataContainer2d reviewData3 = functions.getdata(reviewFilepath);
+        DataContainer2d reviewData4 = functions.getdata(reviewFilepath);
+
+        int first, last;
+
+        timer.start();
+        functions.bubbleSort(reviewData1, 2);
+        cout << "Bubble Sort for review ";
+        timer.end();
+
+        timer.start();
+        functions.binarySearchRange(reviewData1.data, reviewData1.y, 2, "1", first, last);
+        cout<< "Binary Search for all 1 star review ";
+        timer.end();
+
+        timer.start();
+        functions.selectionSort(reviewData2, 2);
+        cout << "Selection Sort for review ";
+        timer.end();
+
+        timer.start();
+        functions.linearSearchRange(reviewData2.data, reviewData2.y, 2, "1", first, last);
+        cout<< "Linear Search for all 1 star review ";
+        timer.end();
+
+        timer.start();
+        functions.mergeSort(reviewData3, 2);
+        cout << "Merge Sort for review ";
+        timer.end();
+
+        timer.start();
+        functions.fibonacciSearchRange(reviewData3.data, reviewData3.y, 2, "1", first, last);
+        cout<< "Finbonacci Search for all 1 star review ";
+        timer.end();
+
+        timer.start();
+        functions.quickSort(reviewData4, 2);
+        cout << "Quick Sort for review ";
+        timer.end();
+
+        timer.start();
+        functions.interpolationSearchRange(reviewData4.data, reviewData4.y, 2, "1", first, last);
+        cout<< "Interpolation Search for all 1 star review ";
+        timer.end();
+
+        reviewData1 = functions.subDataContainer2d(reviewData1,first,last);
+        reviewData2 = functions.subDataContainer2d(reviewData2,first,last);
+        reviewData3 = functions.subDataContainer2d(reviewData3,first,last);
+        reviewData4 = functions.subDataContainer2d(reviewData4,first,last);
+
+        reviewData1 = functions.words(reviewData1,3);
+        reviewData2 = functions.words(reviewData2,3);
+        reviewData3 = functions.words(reviewData3,3);
+        reviewData4 = functions.words(reviewData4,3);
+        
+        timer.start();
+        functions.bubbleSort(reviewData1,0);
+        cout << "Bubble sort for words ";
+        timer.end();
+
+        timer.start();
+        functions.selectionSort(reviewData2,0);
+        cout << "Selection sort for words ";
+        timer.end();
+        
+        timer.start();
+        functions.mergeSort(reviewData3,0);
+        cout << "Merge sort for words ";
+        timer.end();
+        
+        timer.start();
+        functions.quickSort(reviewData4,0);
+        cout << "Quick sort for words ";
+        timer.end();
+
+        reviewData1 = functions.repeatingItem(reviewData1, 0);
+
+        functions.quickSort(reviewData1,1);
+
+        functions.displayTabulatedData(reviewData1);
+
+        cout << endl;
         main();
     }
 
