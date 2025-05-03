@@ -87,23 +87,36 @@ int main() {
         int totalDataSize = transactionData1.y;
 
         timer.start();
-        functions.bubbleSort(transactionData1,5);
-        cout << "Bubble Sort";
+        functions.bubbleSort(transactionData1,2);
+        cout << "Bubble Sort for Catagoy ";
         timer.end();
 
         timer.start();
-        functions.selectionSort(transactionData2,5);
-        cout << "Select Sort";
+        functions.selectionSort(transactionData2,2);
+        cout << "Select Sort Catagoy  ";
         timer.end();
 
         timer.start();
-        functions.quickSort(transactionData3,5);
-        cout << "Quick Sort";
+        functions.quickSort(transactionData3,2);
+        cout << "Quick Sort Catagoy  ";
         timer.end();
 
         timer.start();
-        functions.mergeSort(transactionData4,5);
-        cout << "Merge Sort";
+        functions.mergeSort(transactionData4,2);
+        cout << "Merge Sort Catagoy  ";
+        timer.end();
+
+        timer.start();
+        functions.binarySearchRange(transactionData1.data, transactionData1.y, 2, "Electronics", first, last);
+        cout << "Binary Search for Electronics  ";
+        timer.end();
+
+        transactionData1 = functions.subDataContainer2d(transactionData1, first, last);
+        int electronicSize = transactionData1.y;
+
+        timer.start();
+        functions.bubbleSort(transactionData1, 5);
+        cout << "Bubble sort Payment Methods ";
         timer.end();
 
         timer.start();
@@ -113,39 +126,24 @@ int main() {
 
         transactionData1 = functions.subDataContainer2d(transactionData1, first, last);
         
-        functions.bubbleSort(transactionData1, 2);
-
         timer.start();
-        functions.binarySearchRange(transactionData1.data, transactionData1.y, 2, "Electronics", first, last);
-        cout << "Binary Search for Electronics ";
+        functions.linearSearchRange(transactionData2.data, transactionData2.y, 2, "Electronics", first, last);
+        cout << "Linear Search for Electronics  ";
         timer.end();
 
-        transactionData1 = functions.subDataContainer2d(transactionData1, first, last);
+        transactionData2 = functions.subDataContainer2d(transactionData2, first, last);
         
+        timer.start();
+        functions.selectionSort(transactionData2, 5);
+        cout << "Selection sort Payment Methods ";
+        timer.end();
+
         timer.start();
         functions.linearSearchRange(transactionData2.data, transactionData2.y, 5, "Credit Card", first, last);
         cout << "Linear Search for Credit Card ";
         timer.end();
 
         transactionData2 = functions.subDataContainer2d(transactionData2, first, last);
-        
-        functions.selectionSort(transactionData2, 2);
-
-        timer.start();
-        functions.linearSearchRange(transactionData2.data, transactionData2.y, 2, "Electronics", first, last);
-        cout << "Linear Search for Electronics ";
-        timer.end();
-
-        transactionData2 = functions.subDataContainer2d(transactionData2, first, last);
-
-        timer.start();
-        functions.interpolationSearchRange(transactionData3.data, transactionData3.y, 5, "Credit Card", first, last);
-        cout << "Interpolation Search for Credit Card ";
-        timer.end();
-
-        transactionData3 = functions.subDataContainer2d(transactionData3, first, last);
-        
-        functions.quickSort(transactionData3, 2);
 
         timer.start();
         functions.interpolationSearchRange(transactionData3.data, transactionData3.y, 2, "Electronics", first, last);
@@ -153,19 +151,34 @@ int main() {
         timer.end();
 
         transactionData3 = functions.subDataContainer2d(transactionData3, first, last);
+        
+        timer.start();
+        functions.quickSort(transactionData3, 5);
+        cout << "Quick sort Payment Methods ";
+        timer.end();
 
         timer.start();
-        functions.fibonacciSearchRange(transactionData4.data, transactionData4.y, 5, "Credit Card", first, last);
-        cout << "Fibonacci Search for Credit Card ";
+        functions.interpolationSearchRange(transactionData3.data, transactionData3.y, 5, "Credit Card", first, last);
+        cout << "Interpolation Search for Credit Card ";
+        timer.end();
+
+        transactionData3 = functions.subDataContainer2d(transactionData3, first, last);
+
+        timer.start();
+        functions.fibonacciSearchRange(transactionData4.data, transactionData4.y, 2, "Electronics", first, last);
+        cout << "Fibonacci Search for Electornics ";
         timer.end();
 
         transactionData4 = functions.subDataContainer2d(transactionData4, first, last);
         
-        functions.mergeSort(transactionData4, 2);
+        timer.start();
+        functions.mergeSort(transactionData4, 5);
+        cout << "Meger sort Payment Methods ";
+        timer.end();
 
         timer.start();
-        functions.fibonacciSearchRange(transactionData4.data, transactionData4.y, 2, "Electronics", first, last);
-        cout << "Fibonacci Search for Electronics ";
+        functions.fibonacciSearchRange(transactionData4.data, transactionData4.y, 5, "Credit Card", first, last);
+        cout << "Fibonacci Search for Credit Card ";
         timer.end();
 
         transactionData4 = functions.subDataContainer2d(transactionData4, first, last);
@@ -174,8 +187,11 @@ int main() {
 
         double percentage = ((double)transactionData1.y/(double)totalDataSize)*100;
 
-        cout << "Percentage of \"Electronics\" and \"Credit Card\": " << percentage << "%" << endl;
+        double percentage2 = ((double)transactionData1.y/(double)electronicSize)*100;
 
+        cout << "Percentage of \"Electronics\" and \"Credit Card\" by all transactions: " << percentage << "%" << endl;
+        cout << "Percentage of \"Electronics\" and \"Credit Card\" by all Electronic transactions: " << percentage2 << "%" << endl;
+        cout << endl;
         main();
     }
     else if (input == 3){
