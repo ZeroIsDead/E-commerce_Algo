@@ -48,6 +48,8 @@ int main() {
         cout << "Number of columns: " << data.x << endl;
         cout << "Number of data rows: " << data.y << endl;
         cout << "Total cells: " << data.x * data.y << endl;  
+
+        functions.displayTabulatedData(data);
     }
     return 0;
 }

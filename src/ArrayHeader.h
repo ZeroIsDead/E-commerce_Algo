@@ -1010,7 +1010,6 @@ public:
             }
         }
     }
-<<<<<<< HEAD
 
     /*
         Merge function for MergeSort that handles different data types
@@ -1302,8 +1301,6 @@ public:
         }
     }
 
-=======
->>>>>>> 101e9586e67fe3fa8dace03319001eddeb19f761
 };
 
 #endif // DATACONTAINER_H
