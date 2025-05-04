@@ -371,13 +371,6 @@ class Functions {
             return current;
         }
 
-        int nodeSize(Node* head) {
-            int count = 0;
-            for (Node* curr = head; curr != nullptr; curr = curr->next)
-                count++;
-            return count;
-        }
-
         /*  
             Fibmonaccian Search Range, 
             returns the reference of fist and last index from a sorted linked list 

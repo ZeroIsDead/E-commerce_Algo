@@ -43,9 +43,6 @@ int main() {
     data.tail = functions.getNodeTail(data.head);
 
     LinkedList data2 = functions.repeatingItem(data.head, data.y, 3, data.x);
-   // int size = functions.nodeSize(data.head);
-   // data2.y = size;
-   // data2.x = 2;
 
     data2.head = functions.bubbleSort(data2.head, data.y, 1);
     data2.tail = functions.getNodeTail(data2.head);

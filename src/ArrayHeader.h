@@ -1036,7 +1036,12 @@ public:
         // Do while loop for Fibonacci search
         while (fibM > 1) {
             // Check if fibMm2 is a valid location
-            int i = min(offset + fibMMm2, size - 1);
+            int i;
+            
+            if (offset + fibMMm2 < size)
+                i = offset + fibMMm2;
+            else
+                i = size - 1;
             
             bool isEqual = false;
             bool isLess = false;
