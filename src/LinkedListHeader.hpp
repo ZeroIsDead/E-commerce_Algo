@@ -360,7 +360,7 @@ class Functions {
         }
 
         Node* getNodeAtIndex(Node* head, const int index) {
-            if (!head) return nullptr; // FIXED: Added null check
+            if (!head) return nullptr;
             
             int i = 0;
             Node* current = head;
@@ -369,6 +369,13 @@ class Functions {
                 i++;
             }
             return current;
+        }
+
+        int nodeSize(Node* head) {
+            int count = 0;
+            for (Node* curr = head; curr != nullptr; curr = curr->next)
+                count++;
+            return count;
         }
 
         /*  
@@ -1116,13 +1123,13 @@ class Functions {
             bool isDecimalColumn = !isDateColumn && isDecimal(head->data[fieldIndex]);
             bool isNumericColumn = !isDateColumn && !isDecimalColumn && isNumeric(head->data[fieldIndex]);
             
-            int swapped;
+            bool swapped;
             Node* current;
             Node* lastSorted = nullptr;
             
             // Keep iterating until no more swaps are needed
             do {
-                swapped = 0;
+                swapped = false;
                 current = head;
                 
                 while (current->next != lastSorted) {
@@ -1145,7 +1152,7 @@ class Functions {
                         string* tempData = current->data;
                         current->data = current->next->data;
                         current->next->data = tempData;
-                        swapped = 1;
+                        swapped = true;
                     }
                     
                     current = current->next;

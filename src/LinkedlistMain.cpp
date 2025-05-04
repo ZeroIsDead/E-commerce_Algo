@@ -26,7 +26,7 @@ int main() {
     Timer timer = Timer();
     
     timer.start();
-    data.head = functions.mergeSort(data.head, data.y, 2);
+    data.head = functions.bubbleSort(data.head, data.y, 2);
     data.tail = functions.getNodeTail(data.head);
     cout << "Merge Sort ";
     timer.end();
@@ -35,17 +35,19 @@ int main() {
 
     functions.binarySearchRange(data.head, data.y, "1", 2, first, last);
 
-    cout << first << " " << last << endl;
     data.head = functions.subLinkedList(data.head, first, last, data.x);
     data.tail = functions.getNodeTail(data.head);
     data.y = last-first+1;
     
-    data.head = functions.mergeSort(data.head,data.y,3);
+    data.head = functions.bubbleSort(data.head,data.y,3);
     data.tail = functions.getNodeTail(data.head);
 
     LinkedList data2 = functions.repeatingItem(data.head, data.y, 3, data.x);
+   // int size = functions.nodeSize(data.head);
+   // data2.y = size;
+   // data2.x = 2;
 
-    data2.head = functions.mergeSort(data2.head, data.y, 1);
+    data2.head = functions.bubbleSort(data2.head, data.y, 1);
     data2.tail = functions.getNodeTail(data2.head);
     
     functions.displayTabulatedData(data2);
@@ -53,8 +55,8 @@ int main() {
 
     // Show some stats about the data
     cout << "\n==== File Statistics ====\n" << endl;
-    cout << "Number of columns: " << data.x << endl;
-    cout << "Number of data rows: " << data.y << endl;
-    cout << "Total cells: " << data.x * data.y << endl;
+    cout << "Number of columns: " << data2.x << endl;
+    cout << "Number of data rows: " << data2.y << endl;
+    cout << "Total cells: " << data2.x * data2.y << endl;
     return 0;
 }

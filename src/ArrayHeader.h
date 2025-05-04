@@ -635,8 +635,10 @@ public:
         bool isColumnDecimal = !isDateColumn && isDecimal(data.data[0][column]);;
         bool isColumnNumeric = !isDateColumn && !isColumnDecimal && isNumeric(data.data[0][column]);
         
+        bool swap;
+
         for (int i = 0; i < data.y; i++) {
-            bool swap = false;
+            swap = false;
 
             for (int j = 0; j < data.y - i - 1; j++) {
                 bool shouldSwap = false;
@@ -903,8 +905,8 @@ public:
     */
     void binarySearchRange(string** data, int size, int column, const string& target, int& first, int& last) 
     {
-        int low = 0;
-        int high = size - 1;
+        int low; 
+        int high;
 
         bool isDateColumn = data[0][column].length() >= 10 && data[0][column][2] == '/' && data[0][column][5] == '/';
         bool isColumnDecimal = !isDateColumn && isDecimal(data[0][column]);;
