@@ -71,8 +71,8 @@ int main() {
         int totalTransacation = functions.NumberofTransactions(repeatingData);
 
         functions.displayTabulatedData(repeatingData);
-        cout << endl;
-        cout << "The Total Number of Transactions is: " << totalTransacation << endl; 
+        cout << "The Total Number of Transactions is: " << totalTransacation << endl;
+        cout << endl; 
 
         main();
     }
@@ -346,5 +346,5 @@ int main() {
         main();
     }
 
-    
+    return 0;
 }
