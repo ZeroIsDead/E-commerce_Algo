@@ -18,7 +18,8 @@ class Node {
 
         ~Node() {
             delete[] data;
-            delete next;
+            // FIXED: Remove recursive deletion to prevent stack overflow
+            // The LinkedList destructor will handle this iteratively
         }
 
         Node(const Node&) = delete;
@@ -40,13 +41,22 @@ class LinkedList {
             error = 0;
             fieldHead = nullptr;
             head = nullptr;
+            tail = nullptr;
             x = 0;
             y = 0;
         }
 
         ~LinkedList() {
             delete[] fieldHead;
-            delete head;
+            
+            //  Iterative deletion of linked list to prevent stack overflow
+            Node* current = head;
+            while (current != nullptr) {
+                Node* temp = current;
+                current = current->next;
+                temp->next = nullptr;
+                delete temp;
+            }
         }
 };
 
@@ -62,7 +72,7 @@ class Timer {
 
         void end() {
             endTime = chrono::steady_clock::now();
-            auto duration = chrono::duration_cast < chrono::microseconds>(endTime - startTime);
+            auto duration = chrono::duration_cast<chrono::microseconds>(endTime - startTime);
     
             cout << "Time taken: " << duration.count() << " microseconds" << endl;
         }
@@ -71,89 +81,21 @@ class Timer {
 
 class Functions {
     public:
-        /*
-            Function to Count the number of colums in one single line, (in CSV file).
-            Returns the number of columns as integer
-        */
-        int countColumns(const string& line) {
-            int count = 1; // Start with 1 for the first field
-            
-            for (size_t i = 0; i < line.length(); i++) {
-                if (line[i] == ',') {
-                    count++;
-                }
-            }
-            
-            return count;
-        }
-        
-        /*
-            Function to Count the number of rows in in CSV file. 
-            Returns the number of rows as integer
-        */
-        int countRows(const string& filename) {
-            ifstream file(filename);
-            int count = 0;
-            string line;
-            
-            if (!file.is_open()) {
-                return 0;
-            }
-            
-            while (getline(file, line)) {
-                count++;
-            }
-            
-            file.close();
-            return count;
-        }
-        
-        // Helper function to split a line by comma
-        string* createRow(const string& line, const int numCols) {
-            int col = 0;
-            string current = "";
-
-            string* data = new string[numCols];
-            
-            for (size_t i = 0; i <= line.length(); i++) {
-                if (i == line.length() || line[i] == ',') {
-                    data[col] = current;
-                    current = "";
-
-                    col++;
-
-                    if (col >= numCols) {
-                        break;
-                    }
-                } else {
-                    current += line[i];
-                }
-
-            }
-
-            return data;
-        }
-        
-
+    
         Node* getNodeTail(Node* head) {
-            while (head && head->next) {
-                head = head->next;
+            if (!head) return nullptr; // FIXED: Added null check
+            
+            Node* current = head;
+            while (current && current->next) {
+                current = current->next;
             }
 
-            return head;
+            return current;
         }
-        /*
-            Datadata2d Stuct that take the CSV filename as argument.
-            FIELD names are stored in FIELDS, 1D array
-            DATA is sotries in data, 2D array
-            INT X stores the number of columns
-            INT Y stores the number of ROWS
-            INT ERROR stores 1 or 0 depending on if the struct has been created properly or not
-        */
-
+       
         LinkedList getdata(const string& filename) {
             LinkedList data;
-            string path = "../data/"+filename;
+            string path = "../data/"+filename+".csv";
     
             
             // Count rows and prepare to read the file
@@ -201,10 +143,118 @@ class Functions {
             data.error = 0;
             return data;
         }
-
+    
         /*
-            Displays the data in from struct as a table
+            Function to find repeating items in a linked list at a specific field index.
+            Assumes the input list is ALREADY SORTED by the specified fieldIndex.
+            Returns a LinkedList containing only the repeating items.
+            
+            Parameters:
+            - head: Pointer to the first node of the linked list (already sorted by fieldIndex)
+            - size: Total number of nodes in the linked list
+            - fieldIndex: The index of the field/column to check for repeating items
+            - x: Number of fields/columns in each node's data
+            
+            Returns:
+            - A new LinkedList containing nodes with repeating values
         */
+       LinkedList repeatingItem(Node* head, int size, int fieldIndex, int x) {
+        LinkedList result;
+        result.x = 2; // Two columns: value and count
+        result.error = 0;
+        
+        // Check for valid input
+        if (!head || fieldIndex < 0 || fieldIndex >= x) {
+            cout << "Error: Invalid linked list or field index" << endl;
+            result.error = 1;
+            return result;
+        }
+        
+        // Count unique values, taking advantage of the sorted list
+        int uniqueCount = 0;
+        Node* current = head;
+        
+        if (current) {
+            uniqueCount = 1; // At least one unique value if there's data
+            string prevValue = current->data[fieldIndex];
+            current = current->next;
+            
+            // Count the rest of the unique values
+            while (current) {
+                if (current->data[fieldIndex] != prevValue) {
+                    uniqueCount++;
+                    prevValue = current->data[fieldIndex];
+                }
+                current = current->next;
+            }
+        }
+        
+        // Create arrays for unique values and their counts
+        string* uniqueValues = new string[uniqueCount];
+        int* counts = new int[uniqueCount];
+        
+        // Second pass to populate the arrays (taking advantage of sorted list)
+        current = head;
+        if (current) {
+            int uniqueIndex = 0;
+            uniqueValues[uniqueIndex] = current->data[fieldIndex];
+            counts[uniqueIndex] = 1;
+            
+            current = current->next;
+            while (current) {
+                if (current->data[fieldIndex] == uniqueValues[uniqueIndex]) {
+                    counts[uniqueIndex]++;
+                } else {
+                    uniqueIndex++;
+                    uniqueValues[uniqueIndex] = current->data[fieldIndex];
+                    counts[uniqueIndex] = 1;
+                }
+                current = current->next;
+            }
+        }
+        
+        // Create result linked list
+        Node* resultHead = nullptr;
+        Node* resultTail = nullptr;
+        int resultSize = uniqueCount;
+        
+        // Populate the result with unique values and their counts
+        for (int i = 0; i < uniqueCount; i++) {
+            Node* newNode = new Node();
+            newNode->data = new string[2]; // Two columns: value and count
+            newNode->data[0] = uniqueValues[i];  // The unique value
+            newNode->data[1] = to_string(counts[i]); // Count of occurrences
+            newNode->next = nullptr;
+            
+            if (!resultHead) {
+                resultHead = newNode;
+                resultTail = newNode;
+            } else {
+                resultTail->next = newNode;
+                resultTail = newNode;
+            }
+        }
+        
+        // Set up result LinkedList
+        result.head = resultHead;
+        result.tail = resultTail;
+        result.y = resultSize;
+        
+        // Set field headers for result list
+        result.fieldHead = new string[2];
+        if (head) {
+            result.fieldHead[0] = "Value";
+        }
+        result.fieldHead[1] = "Count";
+        
+        // Clean up temporary arrays
+        delete[] uniqueValues;
+        delete[] counts;
+        
+        return result;
+    }
+        
+        //  Displays the data in from struct as a table
         void displayTabulatedData(const LinkedList& data) {
             if (data.error == 1 || !data.fieldHead || !data.head) {
                 cout << "Error: Invalid data data" << endl;
@@ -212,7 +262,6 @@ class Functions {
             }
 
             Node* currentNode = data.head;
-            int x = 0;
             
             // First, determine the maximum width needed for each column
             int* columnWidths = new int[data.x];
@@ -276,9 +325,6 @@ class Functions {
 
             // Print data rows
             while (currentNode) {
-                // Initialize with header width
-                columnWidths[x] = (*(data.fieldHead + x)).length();
-
                 cout << "|";
                 // Iterate through Row Data
                 for (int x = 0; x < data.x; x++) {
@@ -314,128 +360,869 @@ class Functions {
         }
 
         Node* getNodeAtIndex(Node* head, const int index) {
+            if (!head) return nullptr;
+            
             int i = 0;
-            while (head && i < index) {
-                head = head->next;
+            Node* current = head;
+            while (current && i < index) {
+                current = current->next;
                 i++;
             }
+            return current;
+        }
+
+        /*  
+            Fibmonaccian Search Range, 
+            returns the reference of fist and last index from a sorted linked list 
+        */
+        void fibMonaccianSearchRange(Node* head, int size, const string& item, const int fieldIndex, int& first, int& last) {
+            // Initialize first and last to cover the entire range
+            first = 0;
+            last = size - 1;
+            
+            // If list is empty, set invalid indices and return
+            if (!head || size <= 0) {
+                first = -1;
+                last = -1;
+                return;
+            }
+            
+            // Detect column type from the first node
+            bool isDateColumn = (head->data[fieldIndex].length() >= 10 && head->data[fieldIndex][2] == '/' && head->data[fieldIndex][5] == '/');
+            bool isDecimalColumn = !isDateColumn && isDecimal(head->data[fieldIndex]);
+            bool isNumericColumn = !isDateColumn && !isDecimalColumn && isNumeric(head->data[fieldIndex]);
+            
+            // Find the range of nodes that match the item
+            
+            // First, find the leftmost occurrence
+            int left = 0;
+            int right = size - 1;
+            first = -1;
+            
+            while (left <= right) {
+                int mid = left + (right - left) / 2;
+                
+                // Get node at position mid
+                Node* midNode = getNodeAtIndex(head, mid);
+                
+                if (!midNode) break;  // Safety check
+                
+                bool isGreaterOrEqual = false;
+                
+                // Compare based on data types
+                if (isDateColumn) {
+                    isGreaterOrEqual = parseDateString(midNode->data[fieldIndex]) >= parseDateString(item);
+                } else if (isDecimalColumn) {
+                    isGreaterOrEqual = stod(midNode->data[fieldIndex]) >= stod(item);
+                } else if (isNumericColumn) {
+                    isGreaterOrEqual = stoi(midNode->data[fieldIndex]) >= stoi(item);
+                } else {
+                    isGreaterOrEqual = midNode->data[fieldIndex] >= item;
+                }
+                
+                if (isGreaterOrEqual) {
+                    bool isEqual = false;
+                    
+                    // Check for equality
+                    if (isDateColumn) {
+                        isEqual = parseDateString(midNode->data[fieldIndex]) == parseDateString(item);
+                    } else if (isDecimalColumn) {
+                        isEqual = stod(midNode->data[fieldIndex]) == stod(item);
+                    } else if (isNumericColumn) {
+                        isEqual = stoi(midNode->data[fieldIndex]) == stoi(item);
+                    } else {
+                        isEqual = midNode->data[fieldIndex] == item;
+                    }
+                    
+                    if (isEqual) {
+                        first = mid;
+                    }
+                    
+                    right = mid - 1;
+                } 
+                else {
+                    left = mid + 1;
+                }
+            }
+            
+            // If first occurrence wasn't found, element doesn't exist
+            if (first == -1) {
+                last = -1;
+                return;
+            }
+            
+            // Now find the rightmost occurrence
+            left = 0;
+            right = size - 1;
+            last = -1;
+            
+            while (left <= right) {
+                int mid = left + (right - left) / 2;
+                
+                // Get node at position mid
+                Node* midNode = getNodeAtIndex(head, mid);
+                
+                if (!midNode) break;  // Safety check
+                
+                bool isLessOrEqual = false;
+                
+                // Compare based on data types
+                if (isDateColumn) {
+                    isLessOrEqual = parseDateString(midNode->data[fieldIndex]) <= parseDateString(item);
+                } else if (isDecimalColumn) {
+                    isLessOrEqual = stod(midNode->data[fieldIndex]) <= stod(item);
+                } else if (isNumericColumn) {
+                    isLessOrEqual = stoi(midNode->data[fieldIndex]) <= stoi(item);
+                } else {
+                    isLessOrEqual = midNode->data[fieldIndex] <= item;
+                }
+                
+                if (isLessOrEqual) {
+                    bool isEqual = false;
+                    
+                    // Check for equality
+                    if (isDateColumn) {
+                        isEqual = parseDateString(midNode->data[fieldIndex]) == parseDateString(item);
+                    } else if (isDecimalColumn) {
+                        isEqual = stod(midNode->data[fieldIndex]) == stod(item);
+                    } else if (isNumericColumn) {
+                        isEqual = stoi(midNode->data[fieldIndex]) == stoi(item);
+                    } else {
+                        isEqual = midNode->data[fieldIndex] == item;
+                    }
+                    
+                    if (isEqual) {
+                        last = mid;
+                    }
+                    
+                    left = mid + 1;
+                } else {
+                    right = mid - 1;
+                }
+            }
+        }
+        
+        /*  Binary Search Range, 
+            returns the reference of fist and last index from a sorted linked list 
+        */
+        void binarySearchRange(Node* head, int size, const string& item, const int fieldIndex, int& first, int& last) {
+            // Initialize first and last to cover the entire range
+            first = -1;
+            last = -1;
+        
+            // If list is empty, return
+            if (!head || size <= 0) return;
+        
+            // Detect column type from the first node
+            bool isDateColumn = (head->data[fieldIndex].length() >= 10 && head->data[fieldIndex][2] == '/' && head->data[fieldIndex][5] == '/');
+            bool isDecimalColumn = !isDateColumn && isDecimal(head->data[fieldIndex]);
+            bool isNumericColumn = !isDateColumn && !isDecimalColumn && isNumeric(head->data[fieldIndex]);
+        
+            // Find the leftmost occurrence (first)
+            int left = 0, right = size - 1;
+            while (left <= right) {
+                int mid = left + (right - left) / 2;
+        
+                Node* midNode = getNodeAtIndex(head,mid);
+        
+                if (!midNode) break;
+        
+                bool isGreaterOrEqual = false;
+        
+                if (isDateColumn)
+                    isGreaterOrEqual = parseDateString(midNode->data[fieldIndex]) >= parseDateString(item);
+                else if (isDecimalColumn)
+                    isGreaterOrEqual = stod(midNode->data[fieldIndex]) >= stod(item);
+                else if (isNumericColumn)
+                    isGreaterOrEqual = stoi(midNode->data[fieldIndex]) >= stoi(item);
+                else
+                    isGreaterOrEqual = midNode->data[fieldIndex] >= item;
+        
+                if (isGreaterOrEqual) {
+                    bool isEqual = false;
+                    if (isDateColumn)
+                        isEqual = parseDateString(midNode->data[fieldIndex]) == parseDateString(item);
+                    else if (isDecimalColumn)
+                        isEqual = stod(midNode->data[fieldIndex]) == stod(item);
+                    else if (isNumericColumn)
+                        isEqual = stoi(midNode->data[fieldIndex]) == stoi(item);
+                    else
+                        isEqual = midNode->data[fieldIndex] == item;
+        
+                    if (isEqual)
+                        first = mid;
+        
+                    right = mid - 1;
+                } else {
+                    left = mid + 1;
+                }
+            }
+        
+            // If first wasn't found, item doesn't exist
+            if (first == -1) return;
+        
+            // Find the rightmost occurrence (last)
+            left = 0, right = size - 1;
+            while (left <= right) {
+                int mid = left + (right - left) / 2;
+        
+                Node* midNode = getNodeAtIndex(head,mid);
+        
+                if (!midNode) break;
+        
+                bool isLessOrEqual = false;
+        
+                if (isDateColumn)
+                    isLessOrEqual = parseDateString(midNode->data[fieldIndex]) <= parseDateString(item);
+                else if (isDecimalColumn)
+                    isLessOrEqual = stod(midNode->data[fieldIndex]) <= stod(item);
+                else if (isNumericColumn)
+                    isLessOrEqual = stoi(midNode->data[fieldIndex]) <= stoi(item);
+                else
+                    isLessOrEqual = midNode->data[fieldIndex] <= item;
+        
+                if (isLessOrEqual) {
+                    bool isEqual = false;
+                    if (isDateColumn)
+                        isEqual = parseDateString(midNode->data[fieldIndex]) == parseDateString(item);
+                    else if (isDecimalColumn)
+                        isEqual = stod(midNode->data[fieldIndex]) == stod(item);
+                    else if (isNumericColumn)
+                        isEqual = stoi(midNode->data[fieldIndex]) == stoi(item);
+                    else
+                        isEqual = midNode->data[fieldIndex] == item;
+                    if (isEqual)
+                        last = mid;
+        
+                    left = mid + 1;
+                } else {
+                    right = mid - 1;
+                }
+            }
+        }
+        
+        /*  Interpolation Search Range, 
+            returns the reference of fist and last index from a sorted linked list 
+        */
+        void interpolationSearchRange(Node* head, int size, const string& item, const int fieldIndex, int& first, int& last) {
+            // Initialize first and last to cover the entire range
+            first = 0;
+            last = size - 1;
+            
+            // If list is empty, set invalid indices and return
+            if (!head || size <= 0) {
+                first = -1;
+                last = -1;
+                return;
+            }
+            
+            // Detect column type from the first node
+            bool isDateColumn = (head->data[fieldIndex].length() >= 10 && head->data[fieldIndex][2] == '/' && head->data[fieldIndex][5] == '/');
+            bool isDecimalColumn = !isDateColumn && isDecimal(head->data[fieldIndex]);
+            bool isNumericColumn = !isDateColumn && !isDecimalColumn && isNumeric(head->data[fieldIndex]);
+            
+            // First, find the leftmost occurrence using interpolation search
+            int left = 0;
+            int right = size - 1;
+            first = -1;
+            
+            while (left <= right) {
+                // Get node at left position
+                Node* leftNode = getNodeAtIndex(head, left);
+                Node* rightNode = getNodeAtIndex(head, right);
+                
+                if (!leftNode || !rightNode) break;  // Safety check
+                
+                // Calculate interpolation position
+                int pos = left;
+                if (left != right) {
+                    double valueLeft, valueRight, valueTarget;
+                    
+                    // Extract values based on column type
+                    if (isDateColumn) {
+                        valueLeft = parseDateString(leftNode->data[fieldIndex]);
+                        valueRight = parseDateString(rightNode->data[fieldIndex]);
+                        valueTarget = parseDateString(item);
+                    } else if (isDecimalColumn) {
+                        valueLeft = stod(leftNode->data[fieldIndex]);
+                        valueRight = stod(rightNode->data[fieldIndex]);
+                        valueTarget = stod(item);
+                    } else if (isNumericColumn) {
+                        valueLeft = (double)stoi(leftNode->data[fieldIndex]);
+                        valueRight = (double)stoi(rightNode->data[fieldIndex]);
+                        valueTarget = (double)stoi(item);
+                    } else {
+                        // For string comparisons, use ASCII values as an approximation
+                        valueLeft = (double)leftNode->data[fieldIndex][0];
+                        valueRight = (double)rightNode->data[fieldIndex][0];
+                        valueTarget = (double)item[0];
+                    }
+                    
+                    // Prevent division by zero and handle equal values
+                    if (valueRight > valueLeft) {
+                        // Calculate the estimated position
+                        double fraction = (valueTarget - valueLeft) / (valueRight - valueLeft);
+                        pos = left + (int)(fraction * (right - left));
+                        
+                        // Ensure pos is within bounds
+                        pos = max(left, min(right, pos));
+                    }
+                }
+                
+                // Get node at calculated position
+                Node* posNode = getNodeAtIndex(head, pos);
+                
+                if (!posNode){
+                    break;  // Safety check
+                } 
+                
+                bool isGreaterOrEqual = false;
+                bool isEqual = false;
+                
+                // Compare based on data types
+                if (isDateColumn) {
+                    int posDate = parseDateString(posNode->data[fieldIndex]);
+                    int targetDate = parseDateString(item);
+                    isGreaterOrEqual = posDate >= targetDate;
+                    isEqual = posDate == targetDate;
+                } else if (isDecimalColumn) {
+                    double posValue = stod(posNode->data[fieldIndex]);
+                    double targetValue = stod(item);
+                    isGreaterOrEqual = posValue >= targetValue;
+                    isEqual = posValue == targetValue;
+                } else if (isNumericColumn) {
+                    int posValue = stoi(posNode->data[fieldIndex]);
+                    int targetValue = stoi(item);
+                    isGreaterOrEqual = posValue >= targetValue;
+                    isEqual = posValue == targetValue;
+                } else {
+                    isGreaterOrEqual = posNode->data[fieldIndex] >= item;
+                    isEqual = posNode->data[fieldIndex] == item;
+                }
+                
+                if (isEqual) {
+                    first = pos;
+                    right = pos - 1;  // Continue searching to the left for first occurrence
+                } else if (isGreaterOrEqual) {
+                    right = pos - 1;
+                } else {
+                    left = pos + 1;
+                }
+            }
+            
+            // If first occurrence wasn't found, element doesn't exist
+            if (first == -1) {
+                last = -1;
+                return;
+            }
+            
+            // Now find the rightmost occurrence using interpolation search
+            left = first;  // We can start from the first occurrence
+            right = size - 1;
+            last = -1;
+            
+            while (left <= right) {
+                // Get node at left position
+                Node* leftNode = getNodeAtIndex(head,left);
+                Node* rightNode = getNodeAtIndex(head,right);
+                
+                if (!leftNode || !rightNode) break;  // Safety check
+                
+                // Calculate interpolation position
+                int pos = left;
+                if (left != right) {
+                    double valueLeft, valueRight, valueTarget;
+                    
+                    // Extract values based on column type
+                    if (isDateColumn) {
+                        valueLeft = parseDateString(leftNode->data[fieldIndex]);
+                        valueRight = parseDateString(rightNode->data[fieldIndex]);
+                        valueTarget = parseDateString(item);
+                    } else if (isDecimalColumn) {
+                        valueLeft = stod(leftNode->data[fieldIndex]);
+                        valueRight = stod(rightNode->data[fieldIndex]);
+                        valueTarget = stod(item);
+                    } else if (isNumericColumn) {
+                        valueLeft = (double)stoi(leftNode->data[fieldIndex]);
+                        valueRight = (double)stoi(rightNode->data[fieldIndex]);
+                        valueTarget = (double)stoi(item);
+                    } else {
+                        // For string comparisons, use ASCII values as an approximation
+                        valueLeft = (double)leftNode->data[fieldIndex][0];
+                        valueRight = (double)rightNode->data[fieldIndex][0];
+                        valueTarget = (double)item[0];
+                    }
+                    
+                    // Prevent division by zero and handle equal values
+                    if (valueRight > valueLeft) {
+                        // Calculate the estimated position
+                        double fraction = (valueTarget - valueLeft) / (valueRight - valueLeft);
+                        pos = left + (int)(fraction * (right - left));
+                        
+                        // Ensure pos is within bounds
+                        if (pos < left) {
+                            pos = left;
+                        }   
+                        if (pos > right) {
+                            pos = right;
+                        }
+                    }
+                }
+                
+                // Get node at calculated position
+                Node* posNode = getNodeAtIndex(head, pos);
+                
+                
+                if (!posNode){
+                    break;  // Safety check
+                } 
+                
+                bool isLessOrEqual = false;
+                bool isEqual = false;
+                
+                // Compare based on data types
+                if (isDateColumn) {
+                    int posDate = parseDateString(posNode->data[fieldIndex]);
+                    int targetDate = parseDateString(item);
+                    isLessOrEqual = posDate <= targetDate;
+                    isEqual = posDate == targetDate;
+                } else if (isDecimalColumn) {
+                    double posValue = stod(posNode->data[fieldIndex]);
+                    double targetValue = stod(item);
+                    isLessOrEqual = posValue <= targetValue;
+                    isEqual = posValue == targetValue;
+                } else if (isNumericColumn) {
+                    int posValue = stoi(posNode->data[fieldIndex]);
+                    int targetValue = stoi(item);
+                    isLessOrEqual = posValue <= targetValue;
+                    isEqual = posValue == targetValue;
+                } else {
+                    isLessOrEqual = posNode->data[fieldIndex] <= item;
+                    isEqual = posNode->data[fieldIndex] == item;
+                }
+                
+                if (isEqual) {
+                    last = pos;
+                    left = pos + 1;  // Continue searching to the right for last occurrence
+                } else if (isLessOrEqual) {
+                    left = pos + 1;
+                } else {
+                    right = pos - 1;
+                }
+            }
+        }
+
+        /*  Linear Search Range, 
+            returns the reference of fist and last index from a sorted linked list 
+        */
+        void linearSearchRange(Node* head, int size, const string& item, const int fieldIndex, int& first, int& last) {
+            // Initialize first and last to invalid indices
+            first = -1;
+            last = -1;
+            
+            // If list is empty, return with invalid indices
+            if (!head || size <= 0) {
+                return;
+            }
+
+            for (int i = 0; i < size; i++) {
+                
+                Node* current = getNodeAtIndex(head, i);
+
+                if (!current) break;  // Safety check
+                
+                if (current->data[fieldIndex] == item){
+                    
+                    if (first == -1) {
+                        first = i;
+                    }
+                    // Update last to the current position
+                    last = i;
+                }
+                
+                current = current->next;
+            }
+        }
+
+
+        Node* subLinkedList(Node* head, int first, int last, int x) {
+            if (!head || first < 0 || last < first) {
+                return nullptr;
+            }
+        
+            // Traverse to the `first` node
+            Node* current = getNodeAtIndex(head,first);
+        
+            if (!current) return nullptr; // Index out of range
+        
+            // Create the head of the new sublist
+            Node* newHead = new Node();
+            newHead->data = new string[x];
+            for (int i = 0; i < x; ++i) {
+                newHead->data[i] = current->data[i];
+            }
+        
+            Node* subCurrent = newHead;
+            current = current->next;
+        
+            for (int i = first + 1; i <= last && current; ++i) {
+                Node* newNode = new Node();
+                newNode->data = new string[x];
+                for (int j = 0; j < x; ++j) {
+                    newNode->data[j] = current->data[j];
+                }
+        
+                subCurrent->next = newNode;
+                subCurrent = newNode;
+                current = current->next;
+            }
+        
+            subCurrent->next = nullptr;
+            return newHead;
+        }
+        
+        //  mergeSort function with proper merge step
+        Node* mergeSort(Node* head, const int length, const int fieldIndex) {
+            if (length <= 1 || head == nullptr) {
+                return head;
+            }
+        
+            // Detect column type from the first node
+            bool isDateColumn = (head->data[fieldIndex].length() >= 10 && head->data[fieldIndex][2] == '/' && head->data[fieldIndex][5] == '/');
+            bool isDecimalColumn = !isDateColumn && isDecimal(head->data[fieldIndex]);
+            bool isNumericColumn = !isDateColumn && !isDecimalColumn && isNumeric(head->data[fieldIndex]);
+        
+            // Split the list
+            int mid = length / 2;
+            Node* midNode = getNodeAtIndex(head, mid - 1);
+            if (!midNode){
+                return head; // Safety check
+            } 
+            
+            Node* rightHead = midNode->next;
+            midNode->next = nullptr;
+        
+            // Sort both halves
+            Node* leftSorted = mergeSort(head, mid, fieldIndex);
+            Node* rightSorted = mergeSort(rightHead, length - mid, fieldIndex);
+        
+            // Create a dummy head for easier merging
+            Node dummy;
+            Node* tail = &dummy;
+        
+            // Merge the two sorted halves
+            while (leftSorted && rightSorted) {
+                bool takeLeft = false;
+                
+                // Compare based on data types
+                if (isDateColumn) {
+                    takeLeft = parseDateString(leftSorted->data[fieldIndex]) <= parseDateString(rightSorted->data[fieldIndex]);
+                } else if (isDecimalColumn) {
+                    takeLeft = stod(leftSorted->data[fieldIndex]) <= stod(rightSorted->data[fieldIndex]);
+                } else if (isNumericColumn) {
+                    takeLeft = stoi(leftSorted->data[fieldIndex]) <= stoi(rightSorted->data[fieldIndex]);
+                } else {
+                    takeLeft = leftSorted->data[fieldIndex] <= rightSorted->data[fieldIndex];
+                }
+                
+                // Add the smaller node to result
+                if (takeLeft) {
+                    tail->next = leftSorted;
+                    leftSorted = leftSorted->next;
+                } else {
+                    tail->next = rightSorted;
+                    rightSorted = rightSorted->next;
+                }
+                
+                tail = tail->next;
+            }
+            
+            // Attach remaining nodes
+            if (leftSorted != nullptr) {
+                tail->next = leftSorted;
+            } else {
+                tail->next = rightSorted;
+            }
+            
+            return dummy.next;
+        }
+
+        Node* quickSort(Node* head, const int length, const int fieldIndex) {
+            // Base case: empty list or single node list is already sorted
+            if (!head || !head->next) {
+                return head;
+            }
+            
+            // Create three separate lists: less than pivot, equal to pivot, and greater than pivot
+            Node dummyLess, dummyEqual, dummyGreater;
+            Node* tailLess = &dummyLess;
+            Node* tailEqual = &dummyEqual;
+            Node* tailGreater = &dummyGreater;
+            
+            // Use the first node's value as the pivot
+            string pivotValue = head->data[fieldIndex];
+            
+            // Detect column type from the first node
+            bool isDateColumn = (head->data[fieldIndex].length() >= 10 && head->data[fieldIndex][2] == '/' && head->data[fieldIndex][5] == '/');
+            bool isDecimalColumn = !isDateColumn && isDecimal(head->data[fieldIndex]);
+            bool isNumericColumn = !isDateColumn && !isDecimalColumn && isNumeric(head->data[fieldIndex]);
+            
+            // Partition the list into three parts
+            Node* current = head;
+            Node* next = nullptr;
+            int lessCount = 0;
+            int equalCount = 0;
+            int greaterCount = 0;
+            
+            while (current) {
+                // Save next pointer because we'll modify current->next
+                next = current->next;
+                current->next = nullptr;
+                
+                bool isLess = false;
+                bool isEqual = false;
+                
+                // Compare based on data types
+                if (isDateColumn) {
+                    long currentDate = parseDateString(current->data[fieldIndex]);
+                    long pivotDate = parseDateString(pivotValue);
+                    isLess = currentDate < pivotDate;
+                    isEqual = currentDate == pivotDate;
+                } else if (isDecimalColumn) {
+                    double currentVal = stod(current->data[fieldIndex]);
+                    double pivotVal = stod(pivotValue);
+                    isLess = currentVal < pivotVal;
+                    isEqual = currentVal == pivotVal;
+                } else if (isNumericColumn) {
+                    int currentVal = stoi(current->data[fieldIndex]);
+                    int pivotVal = stoi(pivotValue);
+                    isLess = currentVal < pivotVal;
+                    isEqual = currentVal == pivotVal;
+                } else {
+                    // String comparison
+                    isLess = current->data[fieldIndex] < pivotValue;
+                    isEqual = current->data[fieldIndex] == pivotValue;
+                }
+                
+                // Add to appropriate list
+                if (isLess) {
+                    tailLess->next = current;
+                    tailLess = current;
+                    lessCount++;
+                } else if (isEqual) {
+                    tailEqual->next = current;
+                    tailEqual = current;
+                    equalCount++;
+                } else {
+                    tailGreater->next = current;
+                    tailGreater = current;
+                    greaterCount++;
+                }
+                
+                current = next;
+            }
+            
+            // Recursively sort the "less than" and "greater than" lists
+            Node* sortedLess = nullptr;
+            if (lessCount > 0) {
+                sortedLess = quickSort(dummyLess.next, lessCount, fieldIndex);
+                // Find the tail of the sorted less list
+                tailLess = sortedLess;
+                while (tailLess && tailLess->next) {
+                    tailLess = tailLess->next;
+                }
+            }
+            
+            Node* sortedGreater = nullptr;
+            if (greaterCount > 0) {
+                sortedGreater = quickSort(dummyGreater.next, greaterCount, fieldIndex);
+            }
+            
+            // Connect the three lists: less -> equal -> greater
+            if (sortedLess) {
+                // If we have a "less than" list, connect it to the "equal" list
+                tailLess->next = dummyEqual.next;
+                tailEqual->next = sortedGreater;
+                return sortedLess;
+            } else {
+                // If no "less than" list, start with the "equal" list
+                tailEqual->next = sortedGreater;
+                return dummyEqual.next;
+            }
+        }
+ 
+        // Selection Sort implementation
+        Node* selectSort(Node* head, const int length, const int fieldIndex) {
+            if (!head || !head->next) return head;
+            
+            // First node to check column type
+            bool isDateColumn = (head->data[fieldIndex].length() >= 10 && head->data[fieldIndex][2] == '/' && head->data[fieldIndex][5] == '/');
+            bool isDecimalColumn = !isDateColumn && isDecimal(head->data[fieldIndex]);
+            bool isNumericColumn = !isDateColumn && !isDecimalColumn && isNumeric(head->data[fieldIndex]);
+            
+            Node* current = head;
+            
+            // Iterate through the list
+            while (current) {
+                Node* minNode = current;
+                Node* temp = current->next;
+                
+                // Find the minimum value in the remaining list
+                while (temp) {
+                    bool isLess = false;
+                    
+                    // Compare based on data types
+                    if (isDateColumn) {
+                        isLess = parseDateString(temp->data[fieldIndex]) < parseDateString(minNode->data[fieldIndex]);
+                    } else if (isDecimalColumn) {
+                        isLess = stod(temp->data[fieldIndex]) < stod(minNode->data[fieldIndex]);
+                    } else if (isNumericColumn) {
+                        isLess = stoi(temp->data[fieldIndex]) < stoi(minNode->data[fieldIndex]);
+                    } else {
+                        isLess = temp->data[fieldIndex] < minNode->data[fieldIndex];
+                    }
+                    
+                    if (isLess) {
+                        minNode = temp;
+                    }
+                    
+                    temp = temp->next;
+                }
+                
+                // Swap data if minimum is not the current node
+                if (minNode != current) {
+                    // Swap all data fields
+                    // Assuming data is an array of strings
+                    string* tempData = current->data;
+                    current->data = minNode->data;
+                    minNode->data = tempData;
+                }
+                
+                current = current->next;
+            }
+            
             return head;
         }
 
-        int fibMonaccianSearch(Node* head, int n, const string& item, const int fieldIndex)
-        {
-            /* Initialize fibonacci numbers */
-            int fibMMm2 = 0; // (m-2)'th Fibonacci No.
-            int fibMMm1 = 1; // (m-1)'th Fibonacci No.
-            int fibM = fibMMm2 + fibMMm1; // m'th Fibonacci
-         
-            /* fibM is going to store the smallest Fibonacci
-               Number greater than or equal to n */
-            while (fibM < n) {
-                fibMMm2 = fibMMm1;
-                fibMMm1 = fibM;
-                fibM = fibMMm2 + fibMMm1;
-            }
-         
-            // Marks the eliminated range from front
-            int offset = -1;
-         
-            /* while there are elements to be inspected. Note that
-               we compare arr[fibMm2] with x. When fibM becomes 1,
-               fibMm2 becomes 0 */
-            while (fibM > 1) {
-                // Check if fibMm2 is a valid location
-                int i = min(offset + fibMMm2, n - 1);
-         
-                /* If x is greater than the value at index fibMm2,
-                   cut the subarray array from offset to i */
-                if (getNodeAtIndex(head, i)->data[fieldIndex] < item) {
-                    fibM = fibMMm1;
-                    fibMMm1 = fibMMm2;
-                    fibMMm2 = fibM - fibMMm1;
-                    offset = i;
-                }
-         
-                /* If x is greater than the value at index fibMm2,
-                   cut the subarray after i+1  */
-                else if (getNodeAtIndex(head, i)->data[fieldIndex] > item) {
-                    fibM = fibMMm2;
-                    fibMMm1 = fibMMm1 - fibMMm2;
-                    fibMMm2 = fibM - fibMMm1;
-                }
-         
-                /* element found. return index */
-                else
-                    return i;
-            }
-         
-            /* comparing the last element with x */
-            if (fibMMm1 && getNodeAtIndex(head, offset + 1)->data[fieldIndex] == item)
-                return offset + 1;
-         
-            /*element not found. return -1 */
-            return -1;
-        }
-
-
-        Node* mergeSort(Node* head, const int length, const int fieldIndex) {
-            if (length <= 1) {
-                return head; // Base case - Already Sorted
-            }
-
-            int middlePoint = length / 2;
-            Node* middleNode = getNodeAtIndex(head, middlePoint - 1);
-
-            // Get Head Node of Second Half
-            Node* RightNodeHead = middleNode->next;
-            middleNode->next = nullptr;
-
-            // Get Head Nodes of Both Sides (Already Sorted)
-            Node* SortedLeftNodeHead = mergeSort(head, middlePoint, fieldIndex);
-            Node* SortedRightNodeHead = mergeSort(RightNodeHead, length - middlePoint, fieldIndex);
-
-            // Merge
-            Node* currentLeftNode = SortedLeftNodeHead;
-            Node* currentRightNode = SortedRightNodeHead;
-
-            Node* returnedHead = currentLeftNode->data[fieldIndex] >= currentRightNode->data[fieldIndex]  ? currentRightNode : currentLeftNode;
-            Node* previousNode = nullptr;
-
-            while (currentLeftNode != nullptr && currentRightNode != nullptr) {
-                if (currentLeftNode->data[fieldIndex] >= currentRightNode->data[fieldIndex]) { // Left Bigger or Equal to Right
-                    // Iterate to next Node
-                    Node* TransferedNode = currentRightNode;
-                    currentRightNode = currentRightNode->next;
+        // Bubble Sort implementation
+        Node* bubbleSort(Node* head, const int length, const int fieldIndex) {
+            
+            if (!head || !head->next){
+                return head;
+            } 
+            
+            // First node to check column type
+            bool isDateColumn = (head->data[fieldIndex].length() >= 10 && head->data[fieldIndex][2] == '/' && head->data[fieldIndex][5] == '/');
+            bool isDecimalColumn = !isDateColumn && isDecimal(head->data[fieldIndex]);
+            bool isNumericColumn = !isDateColumn && !isDecimalColumn && isNumeric(head->data[fieldIndex]);
+            
+            bool swapped;
+            Node* current;
+            Node* lastSorted = nullptr;
+            
+            // Keep iterating until no more swaps are needed
+            do {
+                swapped = false;
+                current = head;
+                
+                while (current->next != lastSorted) {
+                    bool shouldSwap = false;
                     
-                    if (previousNode != nullptr) {
-                        previousNode->next = TransferedNode;
+                    // Compare based on data types
+                    if (isDateColumn) {
+                        shouldSwap = parseDateString(current->data[fieldIndex]) > parseDateString(current->next->data[fieldIndex]);
+                    } else if (isDecimalColumn) {
+                        shouldSwap = stod(current->data[fieldIndex]) > stod(current->next->data[fieldIndex]);
+                    } else if (isNumericColumn) {
+                        shouldSwap = stoi(current->data[fieldIndex]) > stoi(current->next->data[fieldIndex]);
+                    } else {
+                        shouldSwap = current->data[fieldIndex] > current->next->data[fieldIndex];
                     }
-
-                    // Track Previous Node
-                    previousNode = TransferedNode;
-
-                    // Place Node from Right side Behind Node from Left side
-                    TransferedNode->next = currentLeftNode;
-                } else  if (currentLeftNode->next == nullptr) { // Left Smaller than Right
-                    currentLeftNode->next = currentRightNode;
-                    break;
-                } else {
-                    // Track Previous Node
-                    previousNode = currentLeftNode;
-
-                    // Iterate to next Node
-                    currentLeftNode = currentLeftNode->next;
+                    
+                    if (shouldSwap) {
+                        // Swap data
+                        // Assuming data is an array of strings
+                        string* tempData = current->data;
+                        current->data = current->next->data;
+                        current->next->data = tempData;
+                        swapped = true;
+                    }
+                    
+                    current = current->next;
                 }
-            }
-
-            return returnedHead;
+                
+                // Update the last sorted node
+                lastSorted = current;
+                
+            } while (swapped);
+            
+            return head;
         }
 
     private:
-
         /*
-            Get the head Node
+            Function to Count the number of colums in one single line, (in CSV file).
+            Returns the number of columns as integer
         */
+        int countColumns(const string& line) {
+            int count = 1; // Start with 1 for the first field
+            
+            for (size_t i = 0; i < line.length(); i++) {
+                if (line[i] == ',') {
+                    count++;
+                }
+            }
+            
+            return count;
+        }
+        
+        /*
+            Function to Count the number of rows in in CSV file. 
+            Returns the number of rows as integer
+        */
+        int countRows(const string& filename) {
+            ifstream file(filename);
+            int count = 0;
+            string line;
+            
+            if (!file.is_open()) {
+                return 0;
+            }
+            
+            while (getline(file, line)) {
+                count++;
+            }
+            
+            file.close();
+            return count;
+        }
+        
+        // Helper function to split a line by comma
+        string* createRow(const string& line, const int numCols) {
+            int col = 0;
+            string current = "";
+
+            string* data = new string[numCols];
+            
+            for (size_t i = 0; i <= line.length(); i++) {
+                if (i == line.length() || line[i] == ',') {
+                    data[col] = current;
+                    current = "";
+
+                    col++;
+
+                    if (col >= numCols) {
+                        break;
+                    }
+                } else {
+                    current += line[i];
+                }
+            }
+
+            return data;
+        }
+        
+        //  Get the head Node
         Node* buildLinkedList(ifstream& file, const int numCols) {
             string line;
 
@@ -451,5 +1238,64 @@ class Functions {
 
             return currentNode;
         }
-};
+
+        long parseDateString(const string& dateStr) {
+        
+            // Expected format: "dd/mm/yyyy"
+            if (dateStr.length() < 10){
+                return 0; // Invalid date format
+            }  
+            
+            int day = stoi(dateStr.substr(0, 2));
+            int month = stoi(dateStr.substr(3, 2));
+            int year = stoi(dateStr.substr(6, 4));
+            
+            // Convert to format yyyymmdd for proper comparison
+            return year * 10000 + month * 100 + day;
+        }
     
+        /*
+            Checks if a string contains only numeric characters (integer)
+            Returns true if the string represents a number, false otherwise
+        */
+        bool isNumeric(const string& str) {
+            try {
+                stoi(str);
+                return true;
+            } catch (const std::invalid_argument&) {
+                return false;
+            } catch (const std::out_of_range&) {
+                return false; // FIXED: Also catch out_of_range exception
+            }
+        }
+    
+        /*
+            Checks if a string is a decimal number (contains a dot and can be converted to double)
+            Returns true if the string represents a decimal number, false otherwise
+        */
+        bool isDecimal(const string& str) {
+            try {
+                // Manually check if the string contains a decimal point
+                bool hasDecimalPoint = false;
+                for (size_t i = 0; i < str.length(); i++) {
+                    if (str[i] == '.') {
+                        hasDecimalPoint = true;
+                        break;
+                    }
+                }
+                
+                if (hasDecimalPoint) {
+                    stod(str);
+                    return true;
+                }
+
+                    return false;
+            } 
+            catch (const std::invalid_argument&) {
+                return false;
+            } 
+            catch (const std::out_of_range&) {
+                return false;
+            }
+        }
+};

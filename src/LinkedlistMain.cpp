@@ -9,7 +9,7 @@ int main() {
     Functions functions;
  
     // Use the specified file path
-    string filepath = "transactions_cleaned.csv";
+    string filepath = "reviews_cleaned";
     
     // Read the CSV file - THIS LINE WAS MISSING
     cout << "Reading file: " << filepath << endl;
@@ -22,34 +22,38 @@ int main() {
          cout << "Error occurred while reading the file." << endl;
          return 0;
     }
-    else{
-        // cout << "[DEBUG] data.error = " << data.error << endl;
-        // cout << "[DEBUG] fieldHead is " << (data.fieldHead ? "not null" : "null") << endl;
-        // cout << "[DEBUG] head is " << (data.head ? "not null" : "null") << endl;
+    
+    Timer timer = Timer();
+    
+    timer.start();
+    data.head = functions.bubbleSort(data.head, data.y, 2);
+    data.tail = functions.getNodeTail(data.head);
+    cout << "Merge Sort ";
+    timer.end();
 
-        // Display the data
+    int first, last;
 
-        Timer timer = Timer();
-        cout << "\n==== CSV File Contents ====\n" << endl;
+    functions.binarySearchRange(data.head, data.y, "1", 2, first, last);
 
-        timer.start();
-        data.head = functions.mergeSort(data.head, data.y, 2);
-        data.tail = functions.getNodeTail(data.head);
-        timer.end();
+    data.head = functions.subLinkedList(data.head, first, last, data.x);
+    data.tail = functions.getNodeTail(data.head);
+    data.y = last-first+1;
+    
+    data.head = functions.bubbleSort(data.head,data.y,3);
+    data.tail = functions.getNodeTail(data.head);
 
-        timer.start();
-        cout << functions.fibMonaccianSearch(data.head, data.y, "Electronics", 2) << " Index" << endl;
-        timer.end();
+    LinkedList data2 = functions.repeatingItem(data.head, data.y, 3, data.x);
 
-        // functions.displayTabulatedData(data);
-        
-        // Show some stats about the data
-        cout << "\n==== File Statistics ====\n" << endl;
-        cout << "Number of columns: " << data.x << endl;
-        cout << "Number of data rows: " << data.y << endl;
-        cout << "Total cells: " << data.x * data.y << endl;  
+    data2.head = functions.bubbleSort(data2.head, data.y, 1);
+    data2.tail = functions.getNodeTail(data2.head);
+    
+    functions.displayTabulatedData(data2);
+    
 
-        functions.displayTabulatedData(data);
-    }
+    // Show some stats about the data
+    cout << "\n==== File Statistics ====\n" << endl;
+    cout << "Number of columns: " << data2.x << endl;
+    cout << "Number of data rows: " << data2.y << endl;
+    cout << "Total cells: " << data2.x * data2.y << endl;
     return 0;
 }
