@@ -1,0 +1,16 @@
+PlayerID,PlayerName,University,ContactNumber,Email,RegistrationType,Priority,Status
+P1001,Lim Jia Yuan,APU,016-1111222,limjy@apu.edu.my,early-bird,1,registered
+P1002,Aisyah Nur Sofia binti Zainal,UTM,017-3333444,aisyah@utm.my,early-bird,1,registered
+P1003,Daniel Lee Zhen Yi,UM,018-5555666,daniel@um.edu.my,early-bird,1,checked-in
+P1005,Siti Nur Farhana binti Hamzah,UPM,019-7777888,siti@upm.edu.my,early-bird,1,registered
+P1006,Chong Wei Han,USM,011-2222333,chong@usm.edu.my,early-bird,1,checked-in
+P1009,Muhammad Amirul Zikri bin Rahman,UKM,012-4444555,harith@ukm.my,early-bird,1,withdrawn
+P1004,Wong Mei Ling,MMU,013-6666777,mei@mmu.edu.my,wildcard,2,registered
+P1008,Nur Hana Maisarah binti Kamil,Taylor's,014-8888999,hana@taylors.edu.my,wildcard,2,replaced
+P1010,Tan Keat Ming,Sunway,015-0000111,tan@sunway.edu.my,wildcard,2,registered
+P1011,Raj Kumar Arvind,UUM,010-1234567,raj@uum.edu.my,wildcard,2,registered
+P1015,Lee Wei Jie,UTAR,011-5678123,lee@utar.edu.my,wildcard,2,registered
+P1012,Amira Syafiqah binti Zainuddin,Monash,012-9012345,amira@usim.edu.my,regular,3,registered
+P1013,Jonathan Chong Heng Yi,UTAR,013-7654321,jonathan@unikl.edu.my,regular,3,checked-in
+P1014,Nadia Amani binti Roslan,INTI,014-3344556,nadia@newinti.edu.my,regular,3,withdrawn
+P1016,Syed Azman bin Faris,Sunway,015-9988776,syed@uniten.edu.my,regular,3,registered
